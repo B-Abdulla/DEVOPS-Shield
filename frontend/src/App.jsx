@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import './App.css';
+import './utils/svgFix'; // Import SVG viewBox fix
 import Dashboard from './pages/Dashboard.jsx';
 import Pipelines from './pages/Pipelines.jsx';
 import AlertsPage from './pages/Alerts.jsx';
@@ -181,28 +182,24 @@ const App = () => {
             e.preventDefault();
             setView(VIEWS.SIMULATION);
             break;
-          case 'b':
-            e.preventDefault();
-            setView(VIEWS.BLOCKCHAIN);
-            break;
-          case 'l':
+          case 'u':
             e.preventDefault();
             setView(VIEWS.AUDIT);
-            break;
-          case ',':
-            e.preventDefault();
-            setView(VIEWS.SETTINGS);
-            break;
-          case 'g':
-            e.preventDefault();
-            setView(VIEWS.GITHUB);
             break;
           case 'i':
             e.preventDefault();
             setView(VIEWS.IMPACT);
             break;
-          case 'k':
+          case 'g':
             e.preventDefault();
+            setView(VIEWS.GITHUB);
+            break;
+          case 'b':
+            e.preventDefault();
+            setView(VIEWS.BLOCKCHAIN);
+            break;
+          default:
+            // Handle other keys if needed
             setSearchQuery('');
             document.getElementById('nav-search')?.focus();
             break;
@@ -217,7 +214,7 @@ const App = () => {
 
     document.addEventListener('keydown', handleKeyboardShortcuts);
     return () => document.removeEventListener('keydown', handleKeyboardShortcuts);
-  }, [keyboardShortcutsEnabled]);
+  }, [keyboardShortcutsEnabled, searchQuery]);
 
   useEffect(() => {
     // Auto-save preferences
@@ -255,7 +252,7 @@ const App = () => {
     setActiveRunId(nextRunId);
     setView(VIEWS.PIPELINES);
     addNotification(`Switched to pipeline: ${pipelineId}`, 'success');
-  }, [runsData, addNotification]);
+  }, [addNotification]);
 
   const onSelectRun = useCallback((runId) => {
     setActiveRunId(runId);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './BlockchainDashboard.css';
 
 const BlockchainDashboard = () => {
@@ -13,7 +13,7 @@ const BlockchainDashboard = () => {
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
 
   // Fetch blockchain statistics
-  const fetchBlockchainStats = async () => {
+  const fetchBlockchainStats = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/blockchain/stats`);
       if (!response.ok) throw new Error('Failed to fetch blockchain stats');
@@ -25,10 +25,10 @@ const BlockchainDashboard = () => {
       console.error('Error fetching blockchain stats:', err);
       setError(`Blockchain error: ${err.message}`);
     }
-  };
+  }, [API_BASE_URL]);
 
   // Fetch health status
-  const fetchHealthStatus = async () => {
+  const fetchHealthStatus = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/blockchain/health`);
       if (!response.ok) throw new Error('Failed to fetch health status');
@@ -37,12 +37,12 @@ const BlockchainDashboard = () => {
       setHealthStatus(data);
     } catch (err) {
       console.error('Error fetching health status:', err);
-      setHealthStatus({ healthy: false, error: err.message });
+      setError(`Health status error: ${err.message}`);
     }
-  };
+  }, [API_BASE_URL]);
 
   // Fetch audit trail
-  const fetchAuditTrail = async () => {
+  const fetchAuditTrail = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -50,16 +50,12 @@ const BlockchainDashboard = () => {
       const params = new URLSearchParams();
       if (filterSeverity) params.append('severity', filterSeverity);
       if (filterRepository) params.append('repository', filterRepository);
-
-      const response = await fetch(
-        `${API_BASE_URL}/api/blockchain/audit-trail?${params}`,
-        { method: 'GET' }
-      );
       
+      const response = await fetch(`${API_BASE_URL}/api/blockchain/audit?${params}`);
       if (!response.ok) throw new Error('Failed to fetch audit trail');
       
       const data = await response.json();
-      setAuditTrail(data.events || []);
+      setAuditTrail(data.audit_trail || []);
       setError(null);
     } catch (err) {
       console.error('Error fetching audit trail:', err);
@@ -67,7 +63,7 @@ const BlockchainDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_BASE_URL, filterSeverity, filterRepository]);
 
   // Initial load
   useEffect(() => {
@@ -82,12 +78,12 @@ const BlockchainDashboard = () => {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchAuditTrail, fetchBlockchainStats, fetchHealthStatus]);
 
   // Fetch audit trail when filters change
   useEffect(() => {
     fetchAuditTrail();
-  }, [filterSeverity, filterRepository]);
+  }, [filterSeverity, filterRepository, fetchAuditTrail]);
 
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {
@@ -121,11 +117,6 @@ const BlockchainDashboard = () => {
 
   const formatTimestamp = (timestamp) => {
     return new Date(timestamp * 1000).toLocaleString();
-  };
-
-  const formatHash = (hash) => {
-    if (!hash) return 'N/A';
-    return `${hash.substring(0, 10)}...${hash.substring(hash.length - 8)}`;
   };
 
   return (
