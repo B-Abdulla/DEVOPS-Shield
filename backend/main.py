@@ -27,39 +27,125 @@ import uvicorn
 
 # Performance monitoring
 import time
-import psutil
 import logging
 import hashlib
-from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+
+# Try to import performance monitoring modules
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+    psutil = None
+
+try:
+    from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+    PROMETHEUS_AVAILABLE = True
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+    Counter = Histogram = Gauge = None
+    generate_latest = CONTENT_TYPE_LATEST = None
 
 # Security
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
+try:
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+    from slowapi.util import get_remote_address
+    from slowapi.errors import RateLimitExceeded
+    SLOWAPI_AVAILABLE = True
+except ImportError:
+    SLOWAPI_AVAILABLE = False
+    Limiter = _rate_limit_exceeded_handler = None
+    get_remote_address = RateLimitExceeded = None
 
 # Application imports
-from src.utils.logger import get_logger
-from src.utils.config import Config
-from src.utils.metrics import MetricsCollector
-from src.utils.database_pool import get_database_pool, DatabaseConfig
-from src.security.audit_logger import security_audit_logger
-from src.security.backup_recovery import backup_manager
-from src.security.secrets_manager import secret_vault
+try:
+    from src.utils.logger import get_logger
+    LOGGER_AVAILABLE = True
+except ImportError:
+    LOGGER_AVAILABLE = False
+    def get_logger(name): return logging.getLogger(name)
+
+try:
+    from src.utils.config import Config
+    CONFIG_AVAILABLE = True
+except ImportError:
+    CONFIG_AVAILABLE = False
+    class Config:
+        def __init__(self):
+            pass
+
+try:
+    from src.utils.metrics import MetricsCollector
+    METRICS_AVAILABLE = True
+except ImportError:
+    METRICS_AVAILABLE = False
+    class MetricsCollector:
+        def __init__(self):
+            pass
+        async def start_monitoring(self):
+            pass
+
+try:
+    from src.utils.database_pool import get_database_pool, DatabaseConfig
+    DATABASE_POOL_AVAILABLE = True
+except ImportError:
+    DATABASE_POOL_AVAILABLE = False
+    def get_database_pool(config=None):
+        return None
+    class DatabaseConfig:
+        def __init__(self, **kwargs):
+            pass
+
+try:
+    from src.security.audit_logger import security_audit_logger
+    AUDIT_LOGGER_AVAILABLE = True
+except ImportError:
+    AUDIT_LOGGER_AVAILABLE = False
+    class security_audit_logger:
+        @staticmethod
+        def log_security_event(event_type, details):
+            pass
+
+try:
+    from src.security.backup_recovery import backup_manager
+    BACKUP_MANAGER_AVAILABLE = True
+except ImportError:
+    BACKUP_MANAGER_AVAILABLE = False
+    class backup_manager:
+        @staticmethod
+        async def initialize():
+            pass
+
+try:
+    from src.security.secrets_manager import secret_vault
+    SECRETS_MANAGER_AVAILABLE = True
+except ImportError:
+    SECRETS_MANAGER_AVAILABLE = False
+    class secret_vault:
+        @staticmethod
+        async def initialize():
+            pass
 
 # Initialize configuration and logging
 load_dotenv()
 logger = get_logger(__name__)
 config = Config()
 
-# Performance metrics
-REQUEST_COUNT = Counter('http_requests_total', 'Total HTTP requests', ['method', 'endpoint', 'status'])
-REQUEST_DURATION = Histogram('http_request_duration_seconds', 'HTTP request duration')
-ACTIVE_CONNECTIONS = Gauge('active_connections', 'Active connections')
-SYSTEM_MEMORY = Gauge('system_memory_usage_bytes', 'System memory usage')
-SYSTEM_CPU = Gauge('system_cpu_usage_percent', 'System CPU usage')
+# Performance metrics (only if prometheus is available)
+if PROMETHEUS_AVAILABLE:
+    REQUEST_COUNT = Counter('http_requests_total', 'Total HTTP requests', ['method', 'endpoint', 'status'])
+    REQUEST_DURATION = Histogram('http_request_duration_seconds', 'HTTP request duration')
+    ACTIVE_CONNECTIONS = Gauge('active_connections', 'Active connections')
+    SYSTEM_MEMORY = Gauge('system_memory_usage_bytes', 'System memory usage')
+    SYSTEM_CPU = Gauge('system_cpu_usage_percent', 'System CPU usage')
+else:
+    REQUEST_COUNT = REQUEST_DURATION = ACTIVE_CONNECTIONS = SYSTEM_MEMORY = SYSTEM_CPU = None
 
-# Rate limiting
-limiter = Limiter(key_func=get_remote_address)
+# Rate limiting (only if slowapi is available)
+if SLOWAPI_AVAILABLE:
+    limiter = Limiter(key_func=get_remote_address)
+else:
+    limiter = None
 
 # Global application state
 application_state = {
@@ -106,8 +192,11 @@ except Exception as e:
     get_performance_metrics = None
     reset_metrics = None
 
-# Initialize metrics collector
-metrics_collector = MetricsCollector()
+# Initialize metrics collector (only if available)
+if METRICS_AVAILABLE:
+    metrics_collector = MetricsCollector()
+else:
+    metrics_collector = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -193,24 +282,27 @@ app = FastAPI(
     }
 )
 
-# Custom rate limit exceeded handler
-@app.exception_handler(RateLimitExceeded)
-async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
-    """Custom rate limit exceeded handler with security logging"""
-    client_ip = get_remote_address(request)
-    security_audit_logger.log_rate_limit_violation(client_ip, request.url.path)
-    
-    return JSONResponse(
-        status_code=429,
-        content={
-            "error": "Rate limit exceeded",
-            "message": "Too many requests, please try again later",
-            "retry_after": exc.detail.retry_after if hasattr(exc, 'detail') else 60
-        }
-    )
+# Custom rate limit exceeded handler (only if slowapi is available)
+if SLOWAPI_AVAILABLE and RateLimitExceeded:
+    @app.exception_handler(RateLimitExceeded)
+    async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
+        """Custom rate limit exceeded handler with security logging"""
+        client_ip = get_remote_address(request) if get_remote_address else request.client.host
+        if AUDIT_LOGGER_AVAILABLE:
+            security_audit_logger.log_rate_limit_violation(client_ip, request.url.path)
+        
+        return JSONResponse(
+            status_code=429,
+            content={
+                "error": "Rate limit exceeded",
+                "message": "Too many requests, please try again later",
+                "retry_after": exc.detail.retry_after if hasattr(exc, 'detail') else 60
+            }
+        )
 
-# Security middleware
-app.state.limiter = limiter
+# Security middleware (only if rate limiting is available)
+if limiter:
+    app.state.limiter = limiter
 
 # Trusted host middleware
 default_allowed_hosts = "localhost,127.0.0.1,*.onrender.com,*.devops-shield.com"
@@ -426,99 +518,103 @@ async def root(request: Request) -> Dict[str, Any]:
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
-# Performance dashboard endpoint
-@app.get("/api/performance/dashboard")
-@limiter.limit("30/minute")
-async def performance_dashboard(request: Request) -> Dict[str, Any]:
-    """Comprehensive performance dashboard with detailed metrics"""
-    try:
-        # Get performance metrics
-        perf_metrics = get_performance_metrics() if get_performance_metrics else {}
-        
-        # Get database metrics
-        db_metrics = {}
+# Performance dashboard endpoint (only if rate limiting is available)
+if limiter:
+    @app.get("/api/performance/dashboard")
+    @limiter.limit("30/minute")
+    async def performance_dashboard(request: Request) -> Dict[str, Any]:
+        """Comprehensive performance dashboard with detailed metrics"""
         try:
-            from src.utils.database_pool import db_pool
-            if db_pool:
-                db_metrics = db_pool.get_performance_metrics()
+            # Get performance metrics
+            perf_metrics = get_performance_metrics() if get_performance_metrics else {}
+            
+            # Get database metrics
+            db_metrics = {}
+            try:
+                from src.utils.database_pool import db_pool
+                if db_pool:
+                    db_metrics = db_pool.get_performance_metrics()
+            except Exception as e:
+                logger.error(f"Database metrics error: {e}")
+                db_metrics = {"error": str(e)}
+            
+            # System resource metrics (only if psutil is available)
+            if PSUTIL_AVAILABLE and psutil:
+                system_metrics = {
+                    "memory": {
+                        "total_gb": psutil.virtual_memory().total / 1024 / 1024 / 1024,
+                        "available_gb": psutil.virtual_memory().available / 1024 / 1024 / 1024,
+                        "used_percent": psutil.virtual_memory().percent,
+                        "used_gb": psutil.virtual_memory().used / 1024 / 1024 / 1024
+                    },
+                    "cpu": {
+                        "percent": psutil.cpu_percent(interval=1),
+                        "count": psutil.cpu_count(),
+                        "frequency_mhz": psutil.cpu_freq().current if psutil.cpu_freq() else 0
+                    },
+                    "disk": {
+                        "total_gb": psutil.disk_usage('/').total / 1024 / 1024 / 1024,
+                        "free_gb": psutil.disk_usage('/').free / 1024 / 1024 / 1024,
+                        "used_percent": (psutil.disk_usage('/').used / psutil.disk_usage('/').total) * 100
+                    },
+                    "network": {
+                        "connections": len(psutil.net_connections()),
+                        "bytes_sent": psutil.net_io_counters().bytes_sent if psutil.net_io_counters() else 0,
+                        "bytes_recv": psutil.net_io_counters().bytes_recv if psutil.net_io_counters() else 0
+                    }
+                }
+            else:
+                system_metrics = {"error": "System monitoring not available - psutil not installed"}
+            
+            # Application metrics
+            app_metrics = {
+                "uptime_seconds": (datetime.now(timezone.utc) - application_state["startup_time"]).total_seconds(),
+                "request_count": application_state["request_count"],
+                "error_count": application_state["error_count"],
+                "error_rate": (application_state["error_count"] / application_state["request_count"] * 100) if application_state["request_count"] > 0 else 0,
+                "last_health_check": application_state["last_health_check"].isoformat() if application_state["last_health_check"] else None
+            }
+            
+            # Performance recommendations
+            recommendations = []
+            
+            # Memory recommendations
+            if PSUTIL_AVAILABLE and psutil and system_metrics.get("memory", {}).get("used_percent", 0) > 80:
+                recommendations.append("High memory usage detected. Consider optimizing memory usage or increasing resources.")
+            
+            # CPU recommendations
+            if PSUTIL_AVAILABLE and psutil and system_metrics.get("cpu", {}).get("percent", 0) > 80:
+                recommendations.append("High CPU usage detected. Consider optimizing code or scaling horizontally.")
+            
+            # Database recommendations
+            if db_metrics.get("avg_response_time_ms", 0) > 1000:
+                recommendations.append("Slow database queries detected. Consider optimizing queries or adding indexes.")
+            
+            # Error rate recommendations
+            if app_metrics.get("error_rate", 0) > 5:
+                recommendations.append("High error rate detected. Check application logs for issues.")
+            
+            return {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "healthy" if len(recommendations) == 0 else "warning",
+                "performance_metrics": perf_metrics,
+                "database_metrics": db_metrics,
+                "system_metrics": system_metrics,
+                "application_metrics": app_metrics,
+                "recommendations": recommendations,
+                "performance_score": calculate_performance_score(system_metrics, db_metrics, app_metrics)
+            }
+            
         except Exception as e:
-            logger.error(f"Database metrics error: {e}")
-            db_metrics = {"error": str(e)}
-        
-        # System resource metrics
-        system_metrics = {
-            "memory": {
-                "total_gb": psutil.virtual_memory().total / 1024 / 1024 / 1024,
-                "available_gb": psutil.virtual_memory().available / 1024 / 1024 / 1024,
-                "used_percent": psutil.virtual_memory().percent,
-                "used_gb": psutil.virtual_memory().used / 1024 / 1024 / 1024
-            },
-            "cpu": {
-                "percent": psutil.cpu_percent(interval=1),
-                "count": psutil.cpu_count(),
-                "frequency_mhz": psutil.cpu_freq().current if psutil.cpu_freq() else 0
-            },
-            "disk": {
-                "total_gb": psutil.disk_usage('/').total / 1024 / 1024 / 1024,
-                "free_gb": psutil.disk_usage('/').free / 1024 / 1024 / 1024,
-                "used_percent": (psutil.disk_usage('/').used / psutil.disk_usage('/').total) * 100
-            },
-            "network": {
-                "connections": len(psutil.net_connections()),
-                "bytes_sent": psutil.net_io_counters().bytes_sent if psutil.net_io_counters() else 0,
-                "bytes_recv": psutil.net_io_counters().bytes_recv if psutil.net_io_counters() else 0
-            }
-        }
-        
-        # Application metrics
-        app_metrics = {
-            "uptime_seconds": (datetime.now(timezone.utc) - application_state["startup_time"]).total_seconds(),
-            "request_count": application_state["request_count"],
-            "error_count": application_state["error_count"],
-            "error_rate": (application_state["error_count"] / application_state["request_count"] * 100) if application_state["request_count"] > 0 else 0,
-            "last_health_check": application_state["last_health_check"].isoformat() if application_state["last_health_check"] else None
-        }
-        
-        # Performance recommendations
-        recommendations = []
-        
-        # Memory recommendations
-        if system_metrics["memory"]["used_percent"] > 80:
-            recommendations.append("High memory usage detected. Consider optimizing memory usage or increasing resources.")
-        
-        # CPU recommendations
-        if system_metrics["cpu"]["percent"] > 80:
-            recommendations.append("High CPU usage detected. Consider optimizing code or scaling horizontally.")
-        
-        # Database recommendations
-        if db_metrics.get("avg_response_time_ms", 0) > 1000:
-            recommendations.append("Slow database queries detected. Consider optimizing queries or adding indexes.")
-        
-        # Error rate recommendations
-        if app_metrics["error_rate"] > 5:
-            recommendations.append("High error rate detected. Check application logs for issues.")
-        
-        return {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "status": "healthy" if len(recommendations) == 0 else "warning",
-            "performance_metrics": perf_metrics,
-            "database_metrics": db_metrics,
-            "system_metrics": system_metrics,
-            "application_metrics": app_metrics,
-            "recommendations": recommendations,
-            "performance_score": calculate_performance_score(system_metrics, db_metrics, app_metrics)
-        }
-        
-    except Exception as e:
-        logger.error(f"Performance dashboard error: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "status": "error",
-                "error": str(e),
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
-        )
+            logger.error(f"Performance dashboard error: {e}")
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "status": "error",
+                    "error": str(e),
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            )
 
 def calculate_performance_score(system_metrics: Dict, db_metrics: Dict, app_metrics: Dict) -> int:
     """Calculate overall performance score (0-100)"""
