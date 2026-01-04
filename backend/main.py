@@ -212,24 +212,25 @@ async def lifespan(app: FastAPI):
             logger.info("Security components initialized")
         
         # Initialize performance monitoring
-        if performance_modules_loaded:
+        if performance_modules_loaded and metrics_collector:
             await metrics_collector.start_monitoring()
             logger.info("Performance monitoring started")
             
             # Initialize database pool
-            db_config = DatabaseConfig(
-                host=os.getenv("DB_HOST", "localhost"),
-                port=int(os.getenv("DB_PORT", 5432)),
-                database=os.getenv("DB_NAME", "devops_shield"),
-                username=os.getenv("DB_USER", "postgres"),
-                password=os.getenv("DB_PASSWORD", ""),
-                min_connections=int(os.getenv("DB_MIN_CONNECTIONS", 5)),
-                max_connections=int(os.getenv("DB_MAX_CONNECTIONS", 20)),
-                enable_query_cache=os.getenv("DB_QUERY_CACHE", "true").lower() == "true",
-                query_cache_size=int(os.getenv("DB_QUERY_CACHE_SIZE", 1000))
-            )
-            await get_database_pool(db_config)
-            logger.info("Database pool initialized")
+            if DATABASE_POOL_AVAILABLE:
+                db_config = DatabaseConfig(
+                    host=os.getenv("DB_HOST", "localhost"),
+                    port=int(os.getenv("DB_PORT", 5432)),
+                    database=os.getenv("DB_NAME", "devops_shield"),
+                    username=os.getenv("DB_USER", "postgres"),
+                    password=os.getenv("DB_PASSWORD", ""),
+                    min_connections=int(os.getenv("DB_MIN_CONNECTIONS", 5)),
+                    max_connections=int(os.getenv("DB_MAX_CONNECTIONS", 20)),
+                    enable_query_cache=os.getenv("DB_QUERY_CACHE", "true").lower() == "true",
+                    query_cache_size=int(os.getenv("DB_QUERY_CACHE_SIZE", 1000))
+                )
+                await get_database_pool(db_config)
+                logger.info("Database pool initialized")
         
         # Database health check
         await check_database_health()
@@ -251,10 +252,10 @@ async def lifespan(app: FastAPI):
     
     try:
         # Cleanup resources
-        if performance_modules_loaded:
+        if performance_modules_loaded and metrics_collector:
             await metrics_collector.stop_monitoring()
         
-        if security_modules_loaded:
+        if security_modules_loaded and BACKUP_MANAGER_AVAILABLE:
             await backup_manager.cleanup()
         
         logger.info("Application shutdown completed")
@@ -408,94 +409,83 @@ for router_path, prefix, tags, router_name in routers_config:
     include_router_safely(router_path, prefix, tags, router_name)
 
 # Enhanced health check
-@app.get("/health")
-@limiter.limit("100/minute")
-async def health_check(request: Request) -> Dict[str, Any]:
-    """Comprehensive health check endpoint with detailed system status"""
-    start_time = time.time()
-    
-    try:
-        health_status = {
+if limiter:
+    @app.get("/health")
+    @limiter.limit("100/minute")
+    async def health_check(request: Request) -> Dict[str, Any]:
+        """Comprehensive health check endpoint with detailed system status"""
+        start_time = time.time()
+        
+        try:
+            health_status = {
+                "status": "healthy",
+                "service": "DevOps Shield Backend",
+                "version": "2.0.0",
+                "environment": os.getenv("ENVIRONMENT", "development"),
+                "uptime_seconds": (datetime.now(timezone.utc) - application_state["startup_time"]).total_seconds(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "features": {
+                    "security_monitoring": True,
+                    "fraud_detection": True,
+                    "blockchain_auditing": os.getenv("BLOCKCHAIN_ENABLED", "false").lower() == "true",
+                    "real_time_alerts": True,
+                    "attack_simulation": True,
+                    "zero_trust_architecture": True
+                },
+                "client_info": {
+                    "ip": request.client.host if request.client else "unknown",
+                    "user_agent": request.headers.get("user-agent", "Unknown"),
+                    "request_id": getattr(request.state, 'request_id', 'N/A')
+                }
+            }
+            
+            # Add system metrics if available
+            if PSUTIL_AVAILABLE and psutil:
+                health_status["system"] = {
+                    "memory_usage_percent": psutil.virtual_memory().percent,
+                    "cpu_usage_percent": psutil.cpu_percent(interval=0.1),
+                    "disk_usage_percent": (psutil.disk_usage('/').used / psutil.disk_usage('/').total) * 100
+                }
+            
+            # Add performance metrics if available
+            if PROMETHEUS_AVAILABLE:
+                health_status["performance"] = {
+                    "request_count": application_state["request_count"],
+                    "error_count": application_state["error_count"],
+                    "error_rate": (application_state["error_count"] / application_state["request_count"] * 100) if application_state["request_count"] > 0 else 0
+                }
+            
+            duration = time.time() - start_time
+            health_status["response_time_ms"] = duration * 1000
+            
+            return health_status
+            
+        except Exception as e:
+            logger.error(f"Health check error: {e}")
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "status": "unhealthy",
+                    "error": str(e),
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            )
+else:
+    @app.get("/health")
+    async def health_check(request: Request) -> Dict[str, Any]:
+        """Basic health check endpoint"""
+        return {
             "status": "healthy",
             "service": "DevOps Shield Backend",
             "version": "2.0.0",
             "environment": os.getenv("ENVIRONMENT", "development"),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "uptime_seconds": (datetime.now(timezone.utc) - application_state["startup_time"]).total_seconds(),
-            "request_count": application_state["request_count"],
-            "error_count": application_state["error_count"],
-            "cors_origins": allowed_origins,
-            "rate_limiting": "enabled",
-            "security_features": {
-                "security_headers": security_modules_loaded,
-                "request_validation": security_modules_loaded and RequestValidationMiddleware is not None,
-                "ip_whitelist": security_modules_loaded and IPWhitelistMiddleware is not None,
-                "audit_logging": True
-            },
-            "performance_features": {
-                "monitoring": performance_modules_loaded,
-                "caching": performance_modules_loaded and CacheMiddleware is not None,
-                "metrics": True
-            },
-            "system_resources": {
-                "memory_usage_percent": psutil.virtual_memory().percent,
-                "cpu_usage_percent": psutil.cpu_percent(),
-                "disk_usage_percent": psutil.disk_usage('/').percent,
-                "active_connections": ACTIVE_CONNECTIONS._value.get()
-            },
-            "database": await check_database_status(),
-            "blockchain": await check_blockchain_status(),
-            "external_services": await check_external_services()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
-        
-        # Update performance metrics
-        REQUEST_DURATION.observe(time.time() - start_time)
-        application_state["last_health_check"] = datetime.now(timezone.utc)
-        
-        return health_status
-        
-    except Exception as e:
-        logger.error(f"Health check failed: {e}")
-        application_state["error_count"] += 1
-        
-        return JSONResponse(
-            status_code=503,
-            content={
-                "status": "degraded",
-                "error": str(e),
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "uptime_seconds": (datetime.now(timezone.utc) - application_state["startup_time"]).total_seconds()
-            }
-        )
 
-# Metrics endpoint for Prometheus
-@app.get("/metrics")
-async def metrics():
-    """Prometheus metrics endpoint"""
-    try:
-        # Update system metrics
-        SYSTEM_MEMORY.set(psutil.virtual_memory().used)
-        SYSTEM_CPU.set(psutil.cpu_percent())
-        
-        return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
-    except Exception as e:
-        logger.error(f"Metrics collection failed: {e}")
-        return Response("Metrics collection failed", status_code=500)
-
-# Enhanced root endpoint
+# Root endpoint
 @app.get("/")
-@limiter.limit("60/minute")
-async def root(request: Request) -> Dict[str, Any]:
-    """Enhanced root endpoint with application information"""
-    client_info = {
-        "ip": get_remote_address(request),
-        "user_agent": request.headers.get("user-agent", "Unknown"),
-        "request_id": request.headers.get("x-request-id", "N/A")
-    }
-    
-    application_state["request_count"] += 1
-    REQUEST_COUNT.labels(method="GET", endpoint="/", status="200").inc()
-    
+async def root():
+    """Root endpoint with basic information"""
     return {
         "message": "DevOps Fraud Shield API - Advanced CI/CD Security Platform",
         "status": "running",
@@ -514,9 +504,23 @@ async def root(request: Request) -> Dict[str, Any]:
             "attack_simulation": True,
             "zero_trust_architecture": True
         },
-        "client_info": client_info,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
+                # Metrics endpoint for Prometheus (only if available)
+if PROMETHEUS_AVAILABLE:
+    @app.get("/metrics")
+    async def metrics():
+        """Prometheus metrics endpoint"""
+        try:
+            # Update system metrics if psutil is available
+            if PSUTIL_AVAILABLE and psutil and SYSTEM_MEMORY and SYSTEM_CPU:
+                SYSTEM_MEMORY.set(psutil.virtual_memory().used)
+                SYSTEM_CPU.set(psutil.cpu_percent())
+            
+            return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+        except Exception as e:
+            logger.error(f"Metrics collection failed: {e}")
+            return Response("Metrics collection failed", status_code=500)
 
 # Performance dashboard endpoint (only if rate limiting is available)
 if limiter:
