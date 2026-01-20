@@ -1,0 +1,72 @@
+# Docker Build - Files to Ignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+backend/logs/*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+test_*.py
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Frontend
+frontend/node_modules/
+frontend/build/
+frontend/.next/
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Backups
+backups/
+*.backup
+
+# Railway specific
+.railway/
+
+# Infrastructure
+infra/
+k8s/
+terraform/
+
+# Output
+output/
