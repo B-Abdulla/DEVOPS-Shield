@@ -24,7 +24,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 
 # Try to import performance monitoring modules
@@ -671,10 +672,18 @@ else:
         }
 
 
-# Root endpoint
-@app.get("/")
-async def root():
-    """Root endpoint with basic information"""
+# Mount static files for frontend
+frontend_build_path = Path(__file__).parent.parent / "frontend" / "build"
+if frontend_build_path.exists():
+    app.mount("/static", StaticFiles(directory=str(frontend_build_path / "static")), name="static")
+    logger.info(f"Serving frontend static files from {frontend_build_path}")
+else:
+    logger.warning(f"Frontend build directory not found at {frontend_build_path}")
+
+# API info endpoint (moved from root)
+@app.get("/api/info")
+async def api_info():
+    """API information endpoint"""
     msg = "DevOps Fraud Shield API - Advanced CI/CD Security"
     return {
         "message": msg + " Platform",
@@ -698,6 +707,22 @@ async def root():
         },
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
+
+# Root endpoint - serve React app
+@app.get("/")
+async def serve_frontend():
+    """Serve the React frontend"""
+    index_path = frontend_build_path / "index.html"
+    if index_path.exists():
+        return FileResponse(str(index_path))
+    else:
+        return JSONResponse(
+            content={
+                "message": "DevOps Fraud Shield API",
+                "note": "Frontend not built. API is available at /api, /docs, and /health",
+                "api_docs": "/docs"
+            }
+        )
 
 # Metrics endpoint for Prometheus (only if available)
 if PROMETHEUS_AVAILABLE:
@@ -1187,6 +1212,31 @@ def create_server_config() -> Dict[str, Any]:
             os.getenv("TIMEOUT_GRACEFUL_SHUTDOWN", 30)
         )
     }
+
+
+# Catch-all route for React Router (must be last)
+@app.get("/{full_path:path}")
+async def catch_all(full_path: str):
+    """Catch-all route to serve React app for client-side routing"""
+    # Don't intercept API routes, docs, or static files
+    if full_path.startswith(("api/", "docs", "redoc", "openapi.json", "health", "metrics", "static/")):
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "Not found"}
+        )
+    
+    # Serve index.html for all other routes (React Router)
+    index_path = frontend_build_path / "index.html"
+    if index_path.exists():
+        return FileResponse(str(index_path))
+    else:
+        return JSONResponse(
+            content={
+                "message": "Frontend not available",
+                "api_docs": "/docs"
+            },
+            status_code=404
+        )
 
 
 # Run server
