@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import './App.css';
+import './components/EnhancedDataViz.css';
 import './utils/svgFix'; // Import SVG viewBox fix
 import Dashboard from './pages/Dashboard.jsx';
 import Pipelines from './pages/Pipelines.jsx';
