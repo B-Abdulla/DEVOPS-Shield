@@ -34,7 +34,6 @@ const simulateController = {
       return response; 
       
     } catch (error) {
-      console.error("Simulation API Error:", error);
       return buildFallbackEvent();
     }
   },

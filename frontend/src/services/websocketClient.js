@@ -33,18 +33,15 @@ class WebSocketClient {
     const connectUrl = url || this.wsUrl || getWebSocketURL();
     
     if (this.isConnecting || (this.ws && this.ws.readyState === WebSocket.OPEN)) {
-      console.log('WebSocket already connected or connecting');
       return;
     }
 
     this.isConnecting = true;
-    console.log('[WebSocket] Connecting to:', connectUrl);
 
     try {
       this.ws = new WebSocket(connectUrl);
 
       this.ws.onopen = () => {
-        console.log('✅ WebSocket Connected');
         this.isConnecting = false;
         this.reconnectAttempts = 0;
         this.emit('connected', { timestamp: new Date().toISOString() });

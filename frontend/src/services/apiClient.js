@@ -43,7 +43,6 @@ class ApiClient {
 
       return response.json();
     } catch (error) {
-      console.error(`[API Error] ${url}:`, error.message);
       throw error;
     }
   }

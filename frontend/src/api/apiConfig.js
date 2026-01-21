@@ -29,11 +29,9 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log('[API Request]', config.method?.toUpperCase(), config.url);
     return config;
   },
   (error) => {
-    console.error('[API Request Error]', error.message);
     return Promise.reject(error);
   }
 );
@@ -41,21 +39,10 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log('[API Response]', response.status, response.config.url);
     return response;
   },
   (error) => {
-    if (error.response) {
-      // Server responded with error
-      console.error('[API Error Response]', error.response.status, error.response.statusText, error.response.data);
-    } else if (error.request) {
-      // Request made but no response
-      console.error('[API Network Error] No response from server at', baseURL);
-      console.error('[Debug] Request:', error.request);
-    } else {
-      // Request setup error
-      console.error('[API Request Setup Error]', error.message);
-    }
+    // Silent error handling - errors will be caught by components
     return Promise.reject(error);
   }
 );
