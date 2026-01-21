@@ -3,6 +3,7 @@ import RiskGraph from '../components/RiskGraph'; // Check path!
 import fraudController from '../api/fraudController';
 import alertsController from '../api/alertsController';
 import simulateController from '../api/simulateController';
+import './Dashboard.css';
 
 const Dashboard = () => {
   // --- STATE ---
@@ -13,9 +14,11 @@ const Dashboard = () => {
     active_alerts: 0
   });
 
+  // eslint-disable-next-line no-unused-vars
   const [graphData, setGraphData] = useState([]);
   const [recentAlerts, setRecentAlerts] = useState([]);
   const [simulationLog, setSimulationLog] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [notification, setNotification] = useState(null);
@@ -125,18 +128,6 @@ const Dashboard = () => {
     }
   }, [fetchDashboardData, notification]);
 
-  // --- STYLES ---
-  const styles = {
-    glassCard: {
-      background: 'rgba(30, 41, 59, 0.6)',
-      backdropFilter: 'blur(12px)',
-      border: '1px solid rgba(71, 85, 105, 0.5)',
-      borderRadius: '16px',
-      padding: '24px',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      display: 'flex', flexDirection: 'column'
-    }
-  };
 
   const getRiskColor = (score) => {
     if (score >= 0.7) return '#ef4444';
@@ -145,45 +136,32 @@ const Dashboard = () => {
   };
 
   return (
-    <div style={{ padding: '2rem', background: '#0f172a', minHeight: '100vh', color: 'white', fontFamily: 'Inter, sans-serif' }}>
+    <div className="dashboard-container">
       
       {/* Toast Notification */}
       {notification && (
-        <div style={{
-          position: 'fixed', top: '20px', right: '20px', zIndex: 1000,
-          background: notification.type === 'error' ? '#ef4444' : notification.type === 'success' ? '#22c55e' : '#3b82f6',
-          padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', boxShadow: '0 10px 15px rgba(0,0,0,0.5)',
-          animation: 'slideIn 0.3s ease-out'
-        }}>
+        <div className={`dashboard-notification ${notification.type}`}>
           {notification.message}
         </div>
       )}
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h2 style={{ margin: 0, background: 'linear-gradient(135deg, #00d4aa, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '2rem' }}>
-            🛡️ Security Command Center
-          </h2>
-          <p style={{ color: '#94a3b8', margin: '4px 0 0 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ width: '8px', height: '8px', background: '#22c55e', borderRadius: '50%', boxShadow: '0 0 8px #22c55e' }}></span>
+      <div className="dashboard-header">
+        <div className="dashboard-header-left">
+          <h2>🛡️ Security Command Center</h2>
+          <p className="dashboard-status">
+            <span className="status-indicator"></span>
             System Operational • Updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : '--'}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={handleSimulation} style={{
-            background: 'linear-gradient(135deg, #ec4899, #8b5cf6)', color: 'white', border: 'none',
-            padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 12px rgba(236, 72, 153, 0.3)'
-          }}>⚡ Simulate Attack</button>
-          <button onClick={fetchDashboardData} style={{
-            background: '#334155', color: 'white', border: '1px solid #475569',
-            padding: '12px 24px', borderRadius: '8px', cursor: 'pointer'
-          }}>🔄 Refresh</button>
+        <div className="dashboard-actions">
+          <button onClick={handleSimulation} className="btn-simulate">⚡ Simulate Attack</button>
+          <button onClick={fetchDashboardData} className="btn-refresh">🔄 Refresh</button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div className="kpi-grid">
         <StatCard icon="📊" title="Total Scans" value={stats.total_analyses.toLocaleString()} color="#3b82f6" />
         <StatCard icon="🛡️" title="Avg Risk Score" value={`${(stats.average_risk_score * 100).toFixed(1)}%`} color={getRiskColor(stats.average_risk_score)} />
         <StatCard icon="🚨" title="High Risk Events" value={stats.high_risk_analyses} color="#ef4444" isAlert={stats.high_risk_analyses > 0} />
@@ -191,25 +169,21 @@ const Dashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-        
+      <div className="main-content">
+
         {/* Risk Graph Container */}
-        <div style={styles.glassCard}>
-          <div style={{ height: '350px' }}> {/* Explicit Height Wrapper */}
-            <RiskGraph data={graphData} />
-          </div>
+        <div className="glass-card risk-graph-container">
+          <RiskGraph data={graphData} />
         </div>
 
         {/* Right Sidebar: Logs & Alerts */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className="sidebar">
           
           {/* Simulation Output Box */}
           {simulationLog && (
-            <div style={{ ...styles.glassCard, border: '1px solid #ef4444', background: 'rgba(239, 68, 68, 0.1)' }}>
-              <h4 style={{ margin: '0 0 10px 0', color: '#ef4444', display:'flex', alignItems:'center', gap:'8px' }}>
-                ⚠️ Attack Detected
-              </h4>
-              <div style={{ fontSize: '0.85rem', color: '#cbd5e1', fontFamily: 'monospace' }}>
+            <div className="glass-card simulation-output">
+              <h4>⚠️ Attack Detected</h4>
+              <div className="simulation-details">
                 <div>ID: {simulationLog.event_id}</div>
                 <div>Risk: <span style={{color:'#ef4444', fontWeight:'bold'}}>{simulationLog.risk_score}</span></div>
                 <div>Files: {simulationLog.activity?.changes_detected?.join(', ')}</div>
@@ -218,19 +192,16 @@ const Dashboard = () => {
           )}
 
           {/* Recent Alerts List */}
-          <div style={{ ...styles.glassCard, flex: 1 }}>
-            <h3 style={{ margin: '0 0 1rem 0', color: '#e2e8f0' }}>Recent Threats</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', maxHeight: '400px' }}>
+          <div className="glass-card">
+            <h3>Recent Threats</h3>
+            <div className="threats-list">
               {recentAlerts.length === 0 ? (
-                <div style={{ textAlign:'center', color:'#64748b', marginTop:'20px' }}>No active threats.</div>
+                <div className="no-threats">No active threats.</div>
               ) : (
                 recentAlerts.map((alert, idx) => (
-                  <div key={idx} style={{
-                    padding: '12px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)',
-                    borderLeft: `3px solid ${alert.severity === 'critical' ? '#ef4444' : '#f59e0b'}`
-                  }}>
-                    <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#f1f5f9' }}>{alert.type}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{alert.message}</div>
+                  <div key={idx} className={`threat-item ${alert.severity}`}>
+                    <div className="threat-type">{alert.type}</div>
+                    <div className="threat-message">{alert.message}</div>
                   </div>
                 ))
               )}
@@ -243,15 +214,11 @@ const Dashboard = () => {
 };
 
 const StatCard = ({ icon, title, value, color, isAlert }) => (
-  <div style={{
-    background: 'rgba(30, 41, 59, 0.6)', border: isAlert ? `1px solid ${color}` : '1px solid rgba(71, 85, 105, 0.5)',
-    borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px',
-    boxShadow: isAlert ? `0 0 15px ${color}40` : 'none'
-  }}>
-    <div style={{ fontSize: '2rem', background: `${color}20`, borderRadius: '12px', padding: '12px', minWidth: '60px', textAlign: 'center' }}>{icon}</div>
-    <div>
-      <h3 style={{ fontSize: '1.8rem', fontWeight: '700', margin: 0, color: 'white' }}>{value}</h3>
-      <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>{title}</p>
+  <div className={`stat-card ${isAlert ? 'alert' : ''}`}>
+    <div className="stat-icon" style={{ background: `${color}20` }}>{icon}</div>
+    <div className="stat-content">
+      <h3>{value}</h3>
+      <p>{title}</p>
     </div>
   </div>
 );
