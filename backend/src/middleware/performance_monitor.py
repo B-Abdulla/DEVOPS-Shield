@@ -408,16 +408,17 @@ class CacheMiddleware(BaseHTTPMiddleware):
             if len(self._cache) >= self.max_cache_size:
                 self._evict_oldest_entries()
             
-            # Cache response data
-            self._cache[cache_key] = (
-                {
-                    'content': response.body,
-                    'status_code': response.status_code,
-                    'headers': dict(response.headers),
-                    'media_type': response.media_type
-                },
-                time.time()
-            )
+            # Cache response data (only for responses with body attribute)
+            if hasattr(response, 'body'):
+                self._cache[cache_key] = (
+                    {
+                        'content': response.body,
+                        'status_code': response.status_code,
+                        'headers': dict(response.headers),
+                        'media_type': response.media_type
+                    },
+                    time.time()
+                )
             self._cache_access_times[cache_key] = time.time()
     
     def _evict_oldest_entries(self):
