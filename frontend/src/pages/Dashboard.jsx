@@ -28,6 +28,9 @@ const Dashboard = ({
   );
 
   const topPipelines = pipelines.slice(0, 3);
+  const highSeverityAlerts = alerts.filter((alert) => alert.severity === 'High' || alert.severity === 'Critical').length;
+  const blockedDeploys = impactMetrics?.blockedMaliciousDeploys ?? 0;
+  const protectedUsers = impactMetrics?.protectedUsers ?? 0;
   const githubIntegration = useMemo(
     () => integrations.find((integration) => integration.id === 'github'),
     [integrations]
@@ -43,6 +46,36 @@ const Dashboard = ({
         </div>
         <RiskBadge score={overallRiskScore} size="lg" />
       </div>
+
+      <section className="card overview-band">
+        <div className="overview-grid">
+          <div className="overview-card">
+            <p className="label">Pipelines monitored</p>
+            <h3>{pipelines.length}</h3>
+            <p className="muted">Active with guardrails</p>
+          </div>
+          <div className="overview-card">
+            <p className="label">Critical / High alerts</p>
+            <h3>{highSeverityAlerts}</h3>
+            <p className="muted">Requires immediate triage</p>
+          </div>
+          <div className="overview-card">
+            <p className="label">Malicious deploys blocked</p>
+            <h3>{blockedDeploys}</h3>
+            <p className="muted">Stopped before reaching prod</p>
+          </div>
+          <div className="overview-card">
+            <p className="label">Users protected</p>
+            <h3>{protectedUsers.toLocaleString()}</h3>
+            <p className="muted">Citizens shielded via CI/CD</p>
+          </div>
+          <div className="overview-card">
+            <p className="label">Mean pipeline risk</p>
+            <h3>{overallRiskScore}</h3>
+            <p className="muted">Rolling average across runs</p>
+          </div>
+        </div>
+      </section>
 
       <div className="grid dashboard-grid">
         <section className="card span-2">
