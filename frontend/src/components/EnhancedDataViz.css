@@ -137,7 +137,8 @@
 }
 
 .progress-fill {
-  height: 100%;\n  background: linear-gradient(90deg, var(--accent, #38bdf8), var(--accent-strong, #22d3ee));
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent, #38bdf8), var(--accent-strong, #22d3ee));
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 8px;
   position: relative;
@@ -174,6 +175,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: rgba(17, 24, 39, 0.6);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .alert-card.critical {
@@ -209,6 +211,7 @@
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
   animation: fadeIn 0.8s ease-out;
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(148, 163, 184, 0.1);
 }
 
@@ -390,6 +393,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   z-index: 1000;
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(148, 163, 184, 0.2);
   animation: fadeIn 0.2s ease-out;
   pointer-events: none;
