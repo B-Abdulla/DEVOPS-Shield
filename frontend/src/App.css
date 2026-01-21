@@ -1154,8 +1154,33 @@ a:hover {
   font-weight: 600;
 }
 
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0 12px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+}
+
 .page-header h1 {
-  margin: 0 0 4px 0;
+  margin: 0 0 6px 0;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+}
+
+.page-header .page-subtitle {
+  margin: 0;
+  color: var(--text-muted, #94a3b8);
+  max-width: 720px;
+  line-height: 1.5;
+}
+
+.page-header .page-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .impact-page,

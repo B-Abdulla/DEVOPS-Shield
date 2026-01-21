@@ -5,6 +5,13 @@ import SecurityHighlights from '../components/SecurityHighlights.jsx';
 
 const SettingsPage = ({ integrations = [], policies = [], authSession, securityHighlights = [] }) => (
   <div className="settings-page">
+    <div className="page-header">
+      <div>
+        <h1>Settings & Controls</h1>
+        <p className="page-subtitle">Manage integrations, enforce policies, and keep guardrails aligned to standards.</p>
+      </div>
+    </div>
+
     <AuthBanner session={authSession} />
     <SecurityHighlights items={securityHighlights} />
     <section className="card">

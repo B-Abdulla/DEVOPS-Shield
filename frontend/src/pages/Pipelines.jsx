@@ -7,16 +7,25 @@ const Pipelines = ({ pipelines, runsByPipeline, activePipelineId, activeRunId, o
   const activeRuns = (runsByPipeline && activePipeline) ? runsByPipeline[activePipeline.id] || [] : [];
 
   return (
-    <div className="pipelines-grid">
-      <PipelineList pipelines={pipelines} runs={runsByPipeline} onSelectPipeline={(pipeline) => onSelectPipeline?.(pipeline.id)} />
-      <PipelineDetail
-        pipeline={activePipeline}
-        runs={activeRuns}
-        activeRunId={activeRunId}
-        onSelectRun={onSelectRun}
-        onAction={onRunAction}
-      />
-    </div>
+    <>
+      <div className="page-header">
+        <div>
+          <h1>Pipelines</h1>
+          <p className="page-subtitle">Observe CI/CD health, drill into runs, and action fixes faster.</p>
+        </div>
+      </div>
+
+      <div className="pipelines-grid">
+        <PipelineList pipelines={pipelines} runs={runsByPipeline} onSelectPipeline={(pipeline) => onSelectPipeline?.(pipeline.id)} />
+        <PipelineDetail
+          pipeline={activePipeline}
+          runs={activeRuns}
+          activeRunId={activeRunId}
+          onSelectRun={onSelectRun}
+          onAction={onRunAction}
+        />
+      </div>
+    </>
   );
 };
 

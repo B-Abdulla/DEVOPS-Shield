@@ -50,6 +50,13 @@ const GitHubConnect = ({ authSession, onConnect, onDisconnect }) => {
 
   return (
     <div className="github-connect grid">
+      <div className="page-header">
+        <div>
+          <h1>GitHub Connect</h1>
+          <p className="page-subtitle">Authorize DevOps Shield, enforce PKCE, and monitor OAuth posture from one place.</p>
+        </div>
+      </div>
+
       <section className="card span-2">
         <header className="card-header">
           <div>

@@ -298,6 +298,13 @@ const Simulation = ({ scenarios = [], history = [], onIncident, onReset }) => {
 
   return (
     <div className="simulation-page">
+      <div className="page-header">
+        <div>
+          <h1>Attack Simulation</h1>
+          <p className="page-subtitle">Run supply-chain and secret-leak drills, watch mitigation steps, and capture audit evidence.</p>
+        </div>
+      </div>
+
       <section className="card simulation-hero">
         <header className="card-header">
           <div>
@@ -309,39 +316,41 @@ const Simulation = ({ scenarios = [], history = [], onIncident, onReset }) => {
             <RiskBadge score={currentRiskScore} size="lg" />
           </div>
         </header>
-        <div className="simulation-meta">
-          <div>
-            <span className="label">Current risk</span>
-            <span>{currentRiskScore}%</span>
-          </div>
-          <div>
-            <span className="label">Backend status</span>
-            <span>{backendStatus}</span>
-          </div>
-          <div>
-            <span className="label">Last drill</span>
-            <span>{lastRunAt ? formatDateTime(lastRunAt) : 'Not run yet'}</span>
-          </div>
-          <div>
-            <span className="label">Risk history points</span>
-            <span>{riskHistory.length}</span>
-          </div>
-        </div>
-        <div className="simulation-actions">
-          {scenarios.map((scenario) => (
-            <button
-              key={scenario.id}
-              type="button"
-              className={`btn-outline scenario-button ${scenario.id === activeScenarioId ? 'active' : ''}`}
-              onClick={() => runScenario(scenario)}
-              disabled={loadingScenario}
-            >
-              {loadingScenario && scenario.id === activeScenarioId ? 'Simulating...' : `Run ${scenario.name}`}
-            </button>
-          ))}
-          <button type="button" className="btn-ghost" onClick={resetSimulation} disabled={loadingScenario}>Reset</button>
-        </div>
       </section>
+
+      <div className="simulation-grid">
+        <div>
+          <span className="label">Current risk</span>
+          <span>{currentRiskScore}%</span>
+        </div>
+        <div>
+          <span className="label">Backend status</span>
+          <span>{backendStatus}</span>
+        </div>
+        <div>
+          <span className="label">Last drill</span>
+          <span>{lastRunAt ? formatDateTime(lastRunAt) : 'Not run yet'}</span>
+        </div>
+        <div>
+          <span className="label">Risk history points</span>
+          <span>{riskHistory.length}</span>
+        </div>
+      </div>
+
+      <div className="simulation-actions">
+        {scenarios.map((scenario) => (
+          <button
+            key={scenario.id}
+            type="button"
+            className={`btn-outline scenario-button ${scenario.id === activeScenarioId ? 'active' : ''}`}
+            onClick={() => runScenario(scenario)}
+            disabled={loadingScenario}
+          >
+            {loadingScenario && scenario.id === activeScenarioId ? 'Simulating...' : `Run ${scenario.name}`}
+          </button>
+        ))}
+        <button type="button" className="btn-ghost" onClick={resetSimulation} disabled={loadingScenario}>Reset</button>
+      </div>
 
       <section className="card simulation-content">
         <div className="simulation-main">

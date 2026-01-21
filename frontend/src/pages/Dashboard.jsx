@@ -51,7 +51,16 @@ const Dashboard = ({
   const incidentMessage = incident?.message || incident?.impact || 'Incident details pending triage.';
 
   return (
-    <div className="grid dashboard-grid">
+    <>
+      <div className="page-header">
+        <div>
+          <h1>Security Command Center</h1>
+          <p className="page-subtitle">Unified view of CI/CD risk posture, live incidents, and top pipelines to investigate.</p>
+        </div>
+        <RiskBadge score={overallRiskScore} size="lg" />
+      </div>
+
+      <div className="grid dashboard-grid">
       <section className="card span-2">
         <header className="card-header">
           <div>
@@ -88,48 +97,49 @@ const Dashboard = ({
         </div>
       </section>
 
-      {incident && (
-        <section className={`card span-2 latest-incident-card severity-${incidentSeverity.toLowerCase()}`}>
+      {githubIntegration && (
+        <section className="card integration-card">
           <header className="card-header">
             <div>
-              <h2>{latestIncident ? 'Latest simulated incident' : 'Priority alert'}</h2>
-              <p className="muted">
-                {incident?.pipelineId ? `${incident.pipelineId} · ` : ''}
-                {incidentTimestamp ? formatDateTime(incidentTimestamp) : 'Detected recently'}
-              </p>
+              <h2>GitHub posture</h2>
+              <p className="muted">OAuth health, runner integrity, and secrets management at a glance.</p>
             </div>
-            <RiskBadge score={incident.riskScore} level={incidentSeverity} />
+            <button type="button" className="btn-outline" onClick={() => onManageIntegrations?.()}>
+              Manage integrations
+            </button>
           </header>
-          <div className="incident-body">
-            <div className="incident-primary">
-              <h3>{incidentTitle}</h3>
-              <p className="muted">{incidentMessage}</p>
+
+          <dl className="status-grid">
+            <div>
+              <dt>Status</dt>
+              <dd>{githubIntegration?.status}</dd>
             </div>
-            <dl className="incident-meta">
-              <div>
-                <dt>Incident id</dt>
-                <dd>{incident.id}</dd>
-              </div>
-              <div>
-                <dt>Severity</dt>
-                <dd>{incidentSeverity}</dd>
-              </div>
-              <div>
-                <dt>Alerts</dt>
-                <dd>{incidentAlertCount ?? '—'}</dd>
-              </div>
-            </dl>
-            <div className="incident-actions">
-              <button type="button" className="btn-outline" onClick={() => onViewAlerts?.()}>
-                View alerts
-              </button>
-              {incident.pipelineId && (
-                <button type="button" className="btn-link" onClick={() => onSelectPipeline?.(incident.pipelineId)}>
-                  Inspect pipeline →
-                </button>
-              )}
+            <div>
+              <dt>Last synced</dt>
+              <dd>{githubIntegration?.lastSync ? formatDateTime(githubIntegration.lastSync) : 'Never'}</dd>
             </div>
-          </div>
+            <div>
+              <dt>Runners</dt>
+              <dd>{githubIntegration?.runners ?? '—'}</dd>
+            </div>
+            <div>
+              <dt>Quarantines</dt>
+              <dd>{githubIntegration?.quarantines ?? 0}</dd>
+            </div>
+            <div>
+              <dt>Secrets rotation</dt>
+              <dd>{githubIntegration?.secretsRotated ?? 0}</dd>
+            </div>
+            <div>
+              <dt>PKCE enforced</dt>
+              <dd>{githubIntegration?.pkce ? 'Yes' : 'No'}</dd>
+            </div>
+          </dl>
+        </section>
+      )}
+      </div>
+    </>
+  );
         </section>
       )}
 
