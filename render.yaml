@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: devops-shield
+    runtime: python312
+    buildCommand: pip install -r requirements.txt && pip install -r backend/requirements.txt
+    startCommand: cd backend && python main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: PORT
+        value: 8080
+      - key: ENVIRONMENT
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+    healthCheckPath: /health
+    healthCheckInterval: 30
+    maxInstance: 3
+    minInstance: 1
+    plan: free
+    region: oregon
+    autoDeploy: true
+    branch: main
