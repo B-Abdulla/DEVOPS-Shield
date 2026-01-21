@@ -761,9 +761,39 @@ async def websocket_alerts(websocket: WebSocket):
 frontend_build_path = Path(__file__).parent.parent / "frontend" / "build"
 if frontend_build_path.exists():
     app.mount("/static", StaticFiles(directory=str(frontend_build_path / "static")), name="static")
+    assets_dir = frontend_build_path / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
     logger.info(f"Serving frontend static files from {frontend_build_path}")
 else:
     logger.warning(f"Frontend build directory not found at {frontend_build_path}")
+
+
+@app.get("/manifest.json")
+async def serve_manifest():
+    """Serve the PWA manifest with correct MIME type"""
+    manifest_path = frontend_build_path / "manifest.json"
+    if manifest_path.exists():
+        return FileResponse(str(manifest_path), media_type="application/manifest+json")
+    return JSONResponse(status_code=404, content={"detail": "Manifest not found"})
+
+
+@app.get("/sw.js")
+async def serve_service_worker():
+    """Serve service worker if present, otherwise 404"""
+    sw_path = frontend_build_path / "sw.js"
+    if sw_path.exists():
+        return FileResponse(str(sw_path), media_type="application/javascript")
+    return JSONResponse(status_code=404, content={"detail": "Service worker not found"})
+
+
+@app.get("/favicon.ico")
+async def serve_favicon():
+    """Serve favicon with proper content type"""
+    favicon_path = frontend_build_path / "favicon.ico"
+    if favicon_path.exists():
+        return FileResponse(str(favicon_path), media_type="image/x-icon")
+    return JSONResponse(status_code=404, content={"detail": "Favicon not found"})
 
 # API info endpoint (moved from root)
 @app.get("/api/info")

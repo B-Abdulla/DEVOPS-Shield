@@ -35,7 +35,21 @@ class SecurityHeadersMiddleware:
                     headers.append((b"X-XSS-Protection", b"1; mode=block"))
                     headers.append((b"Referrer-Policy", b"strict-origin-when-cross-origin"))
                     headers.append((b"Permissions-Policy", b"geolocation=(), microphone=(), camera=()"))
-                    headers.append((b"Content-Security-Policy", b"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'"))
+                    headers.append((
+                        b"Content-Security-Policy",
+                        b"default-src 'self'; "
+                        b"script-src 'self' 'unsafe-inline'; "
+                        b"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                        b"style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                        b"font-src 'self' https://fonts.gstatic.com; "
+                        b"img-src 'self' data: https:; "
+                        b"connect-src 'self'; "
+                        b"manifest-src 'self'; "
+                        b"worker-src 'self'; "
+                        b"frame-ancestors 'self'; "
+                        b"object-src 'none'; "
+                        b"base-uri 'self'"
+                    ))
                     
                     message["headers"] = headers
                 
