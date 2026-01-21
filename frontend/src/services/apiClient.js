@@ -97,7 +97,7 @@ class ApiClient {
   }
 
   async simulateFraud() {
-    return this.get("/simulate");
+    return this.get("/api/simulate/");
   }
 }
 
