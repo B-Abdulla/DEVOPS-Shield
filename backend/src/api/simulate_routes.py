@@ -6,6 +6,7 @@ import random
 router = APIRouter() 
 
 @router.get("/")
+@router.get("")  # Handle requests without trailing slash
 async def simulate_fraud_event():
     """
     Generates fake fraud data for the dashboard.

@@ -97,24 +97,34 @@ async def source_verify(req: SourceVerifyRequest):
     }
 
     # Perform comprehensive source integrity verification
-    verification_result = source_integrity_manager.verify_source_integrity(
-        developer_id=req.developer_id,
-        commit_sha=req.commit_sha,
-        device_id=req.device_id,
-        ip_address=req.ip_address,
-        commit_data=commit_data
-    )
+    try:
+        verification_result = source_integrity_manager.verify_source_integrity(
+            developer_id=req.developer_id,
+            commit_sha=req.commit_sha,
+            device_id=req.device_id,
+            ip_address=req.ip_address,
+            commit_data=commit_data
+        )
 
-    # Override secrets_found if explicitly provided (for backward compatibility)
-    secrets_found = req.has_secrets or verification_result.get('secrets_found', False)
+        # Override secrets_found if explicitly provided (for backward compatibility)
+        secrets_found = req.has_secrets or verification_result.get('secrets_found', False)
 
-    logger.warning(f"Source Integrity: approved={verification_result['approved']}, identity_score={verification_result['identity_score']:.2f}, secrets={secrets_found}")
-    return SourceVerifyResponse(
-        identity_score=verification_result['identity_score'],
-        secrets_found=secrets_found,
-        approved=verification_result['approved'],
-        reasons=verification_result['reasons'],
-    )
+        logger.warning(f"Source Integrity: approved={verification_result['approved']}, identity_score={verification_result['identity_score']:.2f}, secrets={secrets_found}")
+        return SourceVerifyResponse(
+            identity_score=verification_result['identity_score'],
+            secrets_found=secrets_found,
+            approved=verification_result['approved'],
+            reasons=verification_result['reasons'],
+        )
+    except Exception as e:
+        logger.error(f"Source integrity verification error: {e}")
+        # Return degraded response on error
+        return SourceVerifyResponse(
+            identity_score=0.5,
+            secrets_found=req.has_secrets,
+            approved=False,
+            reasons=[f"Verification error: {str(e)}"],
+        )
 
 class DepCheckRequest(BaseModel):
     manifest: dict
