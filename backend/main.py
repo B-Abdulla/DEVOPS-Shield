@@ -1173,9 +1173,7 @@ def create_server_config() -> Dict[str, Any]:
         "host": os.getenv("HOST", "0.0.0.0"),
         "port": int(os.getenv("PORT", 8080)),
         "workers": int(os.getenv("WORKERS", 1)),
-        "reload": (
-            os.getenv("ENVIRONMENT", "development") == "development"
-        ),
+        "reload": False,  # Disable reload for stable operation
         "log_level": os.getenv("LOG_LEVEL", "info").lower(),
         "access_log": (
             os.getenv("ACCESS_LOG", "true").lower() == "true"

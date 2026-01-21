@@ -29,5 +29,28 @@
       }
     ],
     "risk_score": 0.0
+  },
+  "alice@company.com": {
+    "baseline": {
+      "avg_commit_size": 0.0,
+      "avg_files_changed": 0.0,
+      "typical_hours": "{6}",
+      "common_file_types": "set()",
+      "commit_frequency": 0,
+      "last_commit_time": null,
+      "trusted_devices": "{'laptop-xyz789'}",
+      "trusted_ips": "{'192.168.1.100'}"
+    },
+    "history": [
+      {
+        "commit_sha": "abc123def456789",
+        "timestamp": 1768958754.026668,
+        "files_changed": [],
+        "lines_added": 0,
+        "lines_deleted": 0,
+        "content": {}
+      }
+    ],
+    "risk_score": 0.0
   }
 }
