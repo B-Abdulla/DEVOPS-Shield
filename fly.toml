@@ -3,8 +3,7 @@ app = "devops-shield"
 primary_region = "sjc"
 
 [build]
-  builder = "paketobuildpacks"
-  buildpacks = ["gcr.io/paketo-buildpacks/python"]
+  dockerfile = "Dockerfile"
 
 [env]
   PYTHONUNBUFFERED = "true"
@@ -12,40 +11,10 @@ primary_region = "sjc"
   ENVIRONMENT = "production"
   HOST = "0.0.0.0"
 
-[http_service]
-  internal_port = 8080
-  force_https = true
-  auto_start_machines = true
-  auto_stop_machines = true
-  min_machines_running = 1
-
-[http_service.concurrency]
-  type = "requests"
-  hard_limit = 1000
-  soft_limit = 800
-
-[healthcheck]
-  enabled = true
-  kind = "http"
-  interval = "10s"
-  timeout = "5s"
-  initial_delay = "5s"
-  healthy_threshold = 3
-  unhealthy_threshold = 5
-  method = "GET"
-  path = "/health"
-  protocol = "http"
-  tls_skip_verify = false
-
-[processes]
-  web = "cd backend && python main.py"
-
 [[services]]
   protocol = "tcp"
   internal_port = 8080
   processes = ["web"]
-  
-  [services.concurrency]
     type = "requests"
     hard_limit = 1000
     soft_limit = 800
@@ -53,11 +22,22 @@ primary_region = "sjc"
   [[services.ports]]
     port = 80
     handlers = ["http"]
-    force_https = true
 
   [[services.ports]]
     port = 443
     handlers = ["tls", "http"]
+
+  [services.tcp_checks]
+    interval = "10s"
+    timeout = "5s"
+
+[processes]
+  web = "cd backend && python main.py"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256
 
 [[vm]]
   cpu_kind = "shared"
