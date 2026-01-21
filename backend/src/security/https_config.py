@@ -31,11 +31,11 @@ class SecurityHeadersMiddleware:
                     # Security headers
                     headers.append((b"Strict-Transport-Security", b"max-age=31536000; includeSubDomains"))
                     headers.append((b"X-Content-Type-Options", b"nosniff"))
-                    headers.append((b"X-Frame-Options", b"DENY"))
+                    headers.append((b"X-Frame-Options", b"SAMEORIGIN"))
                     headers.append((b"X-XSS-Protection", b"1; mode=block"))
                     headers.append((b"Referrer-Policy", b"strict-origin-when-cross-origin"))
                     headers.append((b"Permissions-Policy", b"geolocation=(), microphone=(), camera=()"))
-                    headers.append((b"Content-Security-Policy", b"default-src 'self'; script-src 'self'"))
+                    headers.append((b"Content-Security-Policy", b"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'"))
                     
                     message["headers"] = headers
                 

@@ -1,10 +1,12 @@
-// Use environment variable or default to localhost:8000
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Use relative URL for production (same origin) or env variable for development
+const API_URL = process.env.REACT_APP_API_URL || (
+  process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000'
+);
 
 class ApiClient {
   constructor() {
     this.baseURL = API_URL;
-    console.log('[API Client] Initialized with base URL:', this.baseURL);
+    console.log('[API Client] Initialized with base URL:', this.baseURL || 'same-origin');
   }
 
   async get(endpoint) {

@@ -5,7 +5,10 @@
 
 import axios from 'axios';
 
-const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Use relative URL for production (same origin) or env variable for development
+const baseURL = process.env.REACT_APP_API_URL || (
+  process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000'
+);
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -16,7 +19,7 @@ const api = axios.create({
   },
 });
 
-console.log('[API Config] Initialized with base URL:', baseURL);
+console.log('[API Config] Initialized with base URL:', baseURL || 'same-origin');
 
 // Request interceptor
 api.interceptors.request.use(

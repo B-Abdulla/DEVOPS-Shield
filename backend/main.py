@@ -21,12 +21,15 @@ from typing import Dict, Any
 
 # Third-party imports
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
+import uuid
+from typing import List
 
 # Try to import performance monitoring modules
 try:
@@ -186,13 +189,42 @@ if SLOWAPI_AVAILABLE:
 else:
     limiter = None
 
+# WebSocket Connection Manager
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+    
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        logger.info(f"WebSocket connected. Total connections: {len(self.active_connections)}")
+    
+    async def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+        logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
+    
+    async def broadcast(self, message: dict):
+        disconnected = []
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                disconnected.append(connection)
+        
+        for conn in disconnected:
+            await self.disconnect(conn)
+
+websocket_manager = ConnectionManager()
+
 # Global application state
 application_state = {
     "startup_time": datetime.now(timezone.utc),
     "request_count": 0,
     "error_count": 0,
     "last_health_check": None,
-    "performance_metrics": {}
+    "performance_metrics": {},
+    "websocket_connections": 0
 }
 
 # Ensure proper Python path
@@ -364,6 +396,10 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/MIT"
     }
 )
+
+# Add GZip compression middleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+logger.info("GZip compression middleware added")
 
 # Custom rate limit exceeded handler (only if slowapi is available)
 if SLOWAPI_AVAILABLE and RateLimitExceeded:
@@ -576,6 +612,28 @@ routers_config = [
 for router_path, prefix, tags, router_name in routers_config:
     include_router_safely(router_path, prefix, tags, router_name)
 
+# Service status endpoint
+@app.get("/api/status/services")
+async def services_status():
+    """Get status of all services and features"""
+    return {
+        "services": {
+            "database": "healthy" if DATABASE_POOL_AVAILABLE else "unavailable",
+            "blockchain": "enabled" if os.getenv("BLOCKCHAIN_ENABLED", "false").lower() == "true" else "disabled",
+            "metrics": "healthy" if PROMETHEUS_AVAILABLE else "unavailable",
+            "rate_limiting": "healthy" if SLOWAPI_AVAILABLE else "unavailable",
+            "performance_monitoring": "healthy" if performance_modules_loaded else "unavailable",
+            "websocket": "healthy",
+            "security_modules": "healthy" if security_modules_loaded else "unavailable"
+        },
+        "connections": {
+            "websocket": len(websocket_manager.active_connections),
+            "active_requests": application_state["request_count"]
+        },
+        "degraded_mode": not all([DATABASE_POOL_AVAILABLE, performance_modules_loaded]),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
 # Enhanced health check
 if limiter:
     @app.get("/health")
@@ -606,7 +664,14 @@ if limiter:
                     ),
                     "real_time_alerts": True,
                     "attack_simulation": True,
-                    "zero_trust_architecture": True
+                    "zero_trust_architecture": True,
+                    "websocket_support": True,
+                    "compression": True
+                },
+                "connections": {
+                    "websocket": len(websocket_manager.active_connections),
+                    "total_requests": application_state["request_count"],
+                    "error_count": application_state["error_count"]
                 },
                 "client_info": {
                     "ip": (
@@ -671,6 +736,26 @@ else:
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
+
+# WebSocket endpoint for real-time alerts
+@app.websocket("/ws/alerts")
+async def websocket_alerts(websocket: WebSocket):
+    """Real-time alert notifications via WebSocket"""
+    await websocket_manager.connect(websocket)
+    application_state["websocket_connections"] = len(websocket_manager.active_connections)
+    
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # Echo back or handle commands
+            await websocket.send_json({
+                "type": "pong",
+                "message": "Connection active",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+    except WebSocketDisconnect:
+        await websocket_manager.disconnect(websocket)
+        application_state["websocket_connections"] = len(websocket_manager.active_connections)
 
 # Mount static files for frontend
 frontend_build_path = Path(__file__).parent.parent / "frontend" / "build"
@@ -1115,6 +1200,17 @@ async def check_external_services() -> Dict[str, Any]:
 
     return services
 
+
+# Request ID middleware
+@app.middleware("http")
+async def add_request_id(request: Request, call_next):
+    """Add unique request ID to each request"""
+    request_id = str(uuid.uuid4())
+    request.state.request_id = request_id
+    
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    return response
 
 # Performance monitoring middleware
 @app.middleware("http")
