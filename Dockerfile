@@ -1,6 +1,14 @@
 # syntax=docker/dockerfile:1
 
-# Base image with Python runtime
+# Stage 1: Build frontend
+FROM node:18-alpine AS frontend-builder
+WORKDIR /frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+# Stage 2: Python backend with frontend
 FROM python:3.11-slim
 
 # Set working directory
@@ -9,31 +17,32 @@ WORKDIR /app
 # Prevent Python from buffering stdout/stderr
 ENV PYTHONUNBUFFERED=1
 
-# Install system dependencies that are commonly needed for scientific Python packages
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip separately to ensure latest tooling
+# Upgrade pip
 RUN pip install --no-cache-dir --upgrade pip
 
-# Copy requirement files first for better caching during iterative builds
+# Copy backend requirements and install
 COPY backend/requirements.txt backend/requirements.txt
-
-# Install backend Python dependencies
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
-# Copy application source code
+# Copy application source
 COPY . /app/
 
-# Ensure start script is executable inside the container
+# Copy built frontend from stage 1
+COPY --from=frontend-builder /frontend/build /app/frontend/build
+
+# Make start script executable
 RUN chmod +x /app/start.sh
 
-# Ensure our backend package is importable regardless of PYTHONPATH
+# Set PYTHONPATH
 ENV PYTHONPATH="/app/backend"
 
-# Expose the port the FastAPI app listens on
+# Expose port
 EXPOSE 8080
 
-# Entrypoint script handles app startup details
+# Run app
 CMD ["./start.sh"]
