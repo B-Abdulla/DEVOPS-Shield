@@ -9,6 +9,7 @@ import AuthBanner from './components/AuthBanner.jsx';
 import LoadingSpinner from './components/LoadingSpinner.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import NotificationSystem from './components/NotificationSystem.jsx';
+import ChatAssistant from './components/ChatAssistant.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import UserProfile from './pages/UserProfile.jsx';
 import ThreatIntel from './pages/ThreatIntel.jsx';
@@ -607,6 +608,9 @@ const App = () => {
             </div>
           </div>
         </main>
+
+        {/* Project Assistant Chatbot */}
+        <ChatAssistant />
       </div>
     </ErrorBoundary>
   );
