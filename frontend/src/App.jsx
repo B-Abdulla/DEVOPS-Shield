@@ -608,10 +608,10 @@ const App = () => {
             </div>
           </div>
         </main>
-
-        {/* Project Assistant Chatbot */}
-        <ChatAssistant />
       </div>
+
+      {/* Project Assistant Chatbot - Global Viewport Relative */}
+      <ChatAssistant />
     </ErrorBoundary>
   );
 };
