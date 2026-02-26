@@ -44,19 +44,28 @@
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     color: var(--text-secondary);
-    border-radius: 6px;
-    width: 28px;
-    height: 28px;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all var(--transition-fast);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .nav-toggle:hover {
     background: var(--bg-tertiary);
-    color: var(--text-primary);
+    color: var(--primary);
+    border-color: var(--primary);
+    box-shadow: 0 0 12px var(--primary-glow);
+    transform: scale(1.05);
+}
+
+.toggle-icon {
+    font-size: 1.1rem;
+    font-weight: 900;
 }
 
 .nav-search {

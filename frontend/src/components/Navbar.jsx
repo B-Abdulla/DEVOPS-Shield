@@ -37,8 +37,9 @@ const Navbar = ({
                     onClick={onToggleCollapse}
                     aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                     aria-expanded={!collapsed}
+                    title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
                 >
-                    <span className="toggle-icon">{collapsed ? '→' : '←'}</span>
+                    <span className="toggle-icon">{collapsed ? '☰' : '«'}</span>
                 </button>
             </div>
 

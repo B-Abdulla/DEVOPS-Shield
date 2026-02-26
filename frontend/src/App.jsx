@@ -540,9 +540,20 @@ const App = () => {
 
               {/* Header */}
               <header className="content-header">
-                <div className="header-title">
-                  <h1>{NAVIGATION_ITEMS.find(item => item.id === view)?.label}</h1>
-                  <p className="muted">Production-ready CI/CD risk observability</p>
+                <div className="header-title-container">
+                  <button
+                    type="button"
+                    className="header-toggle-btn"
+                    onClick={toggleSidebar}
+                    title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+                    aria-label={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+                  >
+                    {sidebarCollapsed ? '☰' : '«'}
+                  </button>
+                  <div className="header-title">
+                    <h1>{NAVIGATION_ITEMS.find(item => item.id === view)?.label}</h1>
+                    <p className="muted">Production-ready CI/CD risk observability</p>
+                  </div>
                 </div>
                 <div className="header-actions">
                   <button
