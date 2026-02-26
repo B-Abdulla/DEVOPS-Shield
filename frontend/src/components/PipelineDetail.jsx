@@ -19,18 +19,22 @@ const PipelineDetail = ({ pipeline, runs = [], activeRunId, onSelectRun, onActio
   const proofCheck = verifySignature(selectedRun?.immutableProof || {});
 
   return (
-    <section className="pipeline-detail">
-      <header className="detail-header card">
-        <div>
+    <section className="pipeline-detail-premium">
+      <header className="detail-hero-card">
+        <div className="hero-info">
+          <span className="badge-premium" style={{ marginBottom: '12px', display: 'inline-block' }}>
+            {pipeline.lastStatus}
+          </span>
           <h2>{pipeline.name}</h2>
-          <p className="muted">{pipeline.description}</p>
-          <div className="tags">
+          <p className="muted" style={{ maxWidth: '400px' }}>{pipeline.description}</p>
+          <div className="tags" style={{ marginTop: '16px' }}>
             {pipeline.tags?.map((tag) => <span key={tag} className="tag">{tag}</span>)}
           </div>
         </div>
-        <div className="detail-meta">
-          <RiskBadge score={pipeline.lastRiskScore} level={pipeline.lastRiskLevel} />
-          <span className="muted">Last status · {pipeline.lastStatus}</span>
+        <div className="hero-viz">
+          <div className="viz-score">{pipeline.lastRiskScore}%</div>
+          <div className="viz-label">Security Posture</div>
+          <RiskBadge score={pipeline.lastRiskScore} level={pipeline.lastRiskLevel} size="md" />
         </div>
       </header>
 

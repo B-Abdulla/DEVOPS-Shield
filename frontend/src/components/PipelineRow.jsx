@@ -1,6 +1,5 @@
 import React from 'react';
 import RiskBadge from './RiskBadge';
-import { formatDateTime } from '../utils/dateHelpers';
 
 const PipelineRow = ({ pipeline, onSelect }) => {
   const trendValues = pipeline.trend || [];
@@ -9,32 +8,44 @@ const PipelineRow = ({ pipeline, onSelect }) => {
     ? 'up'
     : 'down';
 
+  const isHealthy = pipeline.lastStatus === 'Success' || pipeline.lastStatus === 'Passed';
+
   return (
-    <div className="pipeline-row" role="button" tabIndex={0} onClick={() => onSelect?.(pipeline)} onKeyDown={(event) => {
-      if (event.key === 'Enter') onSelect?.(pipeline);
-    }}>
-      <div className="pipeline-row-main">
-        <h3>{pipeline.name}</h3>
-        <div className="tags">
-          {pipeline.tags?.map((tag) => (
-            <span key={tag} className="tag">{tag}</span>
-          ))}
+    <div
+      className={`pipeline-row ${onSelect && pipeline.id === undefined ? 'active' : ''}`}
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect?.(pipeline)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') onSelect?.(pipeline);
+      }}
+    >
+      <div className="row-header">
+        <div className="pipeline-row-main">
+          <h3>{pipeline.name}</h3>
+          <p className="muted" style={{ fontSize: '0.8rem', margin: '4px 0' }}>{pipeline.description}</p>
         </div>
-        <p className="muted">{pipeline.description}</p>
+        <span className="status-icon" title={`Status: ${pipeline.lastStatus}`}>
+          {isHealthy ? '✅' : '❌'}
+        </span>
       </div>
-      <div className="pipeline-row-meta">
-        <RiskBadge score={pipeline.lastRiskScore} level={pipeline.lastRiskLevel} />
+
+      <div className="row-meta">
+        <div className="row-tags">
+          {pipeline.tags?.slice(0, 2).map((tag) => (
+            <span key={tag} className="row-tag">{tag}</span>
+          ))}
+          {pipeline.tags?.length > 2 && <span className="row-tag">+{pipeline.tags.length - 2}</span>}
+        </div>
+
         <div className="pipeline-metrics">
-          <span className="label">Last run</span>
-          <span>{formatDateTime(runsById[pipeline.lastRunId]?.completedAt) || '—'}</span>
+          <div className={`mini-trend ${trendDirection}`}>
+            {trendDirection === 'up' ? '📈' : '📉'}
+            <span>{Math.abs(lastTrend ?? 0)}%</span>
+          </div>
         </div>
-        <div className={`trend trend-${trendDirection}`}>
-          <span>{lastTrend ?? '—'}</span>
-        </div>
-        <button type="button" className="btn-ghost" onClick={(event) => {
-          event.stopPropagation();
-          onSelect?.(pipeline);
-        }}>View</button>
+
+        <RiskBadge score={pipeline.lastRiskScore} level={pipeline.lastRiskLevel} size="sm" />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import PipelineList from '../components/PipelineList';
 import PipelineDetail from '../components/PipelineDetail';
+import './Pipelines.css';
 
 const Pipelines = ({ pipelines, runsByPipeline, activePipelineId, activeRunId, onSelectPipeline, onSelectRun, onRunAction }) => {
   const activePipeline = pipelines.find((pipeline) => pipeline.id === activePipelineId) || pipelines[0];
