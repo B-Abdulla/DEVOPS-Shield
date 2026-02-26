@@ -20,9 +20,19 @@ class ApiClient {
     });
   }
 
+  async put(endpoint, body = {}) {
+    return this.request(endpoint, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+  }
+
   async request(endpoint, options = {}) {
-    // Ensure endpoint starts with /
-    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    // Ensure endpoint starts with / and doesn't end with / unless it's just /
+    let cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    if (cleanEndpoint.length > 1 && cleanEndpoint.endsWith('/')) {
+      cleanEndpoint = cleanEndpoint.slice(0, -1);
+    }
     const url = `${this.baseURL}${cleanEndpoint}`;
 
     const config = {
@@ -97,6 +107,9 @@ class ApiClient {
 
   async simulateFraud() {
     return this.get("/api/simulate/");
+  }
+  async updateProfile(data) {
+    return this.put("/api/auth/profile", data);
   }
 }
 

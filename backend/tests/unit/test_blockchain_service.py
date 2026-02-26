@@ -49,7 +49,8 @@ class TestBlockchainAuditService:
             'event_type': 'fraud_detection',
             'risk_score': 0.85,
             'repository': 'production-app',
-            'rule_violations': ['suspicious_commit']
+            'rule_violations': ['suspicious_commit'],
+            'timestamp': 1700000000.0
         }
         
         hash1 = service_no_web3.calculate_data_hash(data)
@@ -74,12 +75,14 @@ class TestBlockchainAuditService:
         data1 = {
             'risk_score': 0.85,
             'event_type': 'fraud_detection',
-            'repository': 'app'
+            'repository': 'app',
+            'timestamp': 1700000000.0
         }
         data2 = {
             'event_type': 'fraud_detection',
             'repository': 'app',
-            'risk_score': 0.85
+            'risk_score': 0.85,
+            'timestamp': 1700000000.0
         }
         
         hash1 = service_no_web3.calculate_data_hash(data1)

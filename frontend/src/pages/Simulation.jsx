@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import './Simulation.css';
 import RiskBadge from '../components/RiskBadge';
 import RiskGraph from '../components/RiskGraph';
 import zeroTrustService from '../api/zeroTrustService';
@@ -74,7 +75,7 @@ const Simulation = ({ scenarios = [], history = [], onIncident, onReset }) => {
     }
 
     try {
-      const response = await simulateController.simulateFraud();
+      const response = await simulateController.simulateFraud(scenario.id);
       fraudEvent = response?.fraud_event || response?.data?.fraud_event || response;
 
       if (fraudEvent?.event_id) {
@@ -319,21 +320,21 @@ const Simulation = ({ scenarios = [], history = [], onIncident, onReset }) => {
       </section>
 
       <div className="simulation-grid">
-        <div>
+        <div className="simulation-stat-card">
           <span className="label">Current risk</span>
-          <span>{currentRiskScore}%</span>
+          <strong className="stat-value">{currentRiskScore}%</strong>
         </div>
-        <div>
+        <div className="simulation-stat-card">
           <span className="label">Backend status</span>
-          <span>{backendStatus}</span>
+          <strong className="stat-value">{backendStatus}</strong>
         </div>
-        <div>
+        <div className="simulation-stat-card">
           <span className="label">Last drill</span>
-          <span>{lastRunAt ? formatDateTime(lastRunAt) : 'Not run yet'}</span>
+          <strong className="stat-value">{lastRunAt ? formatDateTime(lastRunAt) : 'Not run yet'}</strong>
         </div>
-        <div>
+        <div className="simulation-stat-card">
           <span className="label">Risk history points</span>
-          <span>{riskHistory.length}</span>
+          <strong className="stat-value">{riskHistory.length}</strong>
         </div>
       </div>
 
@@ -352,26 +353,26 @@ const Simulation = ({ scenarios = [], history = [], onIncident, onReset }) => {
         <button type="button" className="btn-ghost" onClick={resetSimulation} disabled={loadingScenario}>Reset</button>
       </div>
 
-      <section className="card simulation-content">
+      <section className="simulation-content">
         <div className="simulation-main">
           <RiskGraph data={riskHistory} />
         </div>
         <aside className="simulation-sidebar">
           {activeScenario ? (
-            <div className="scenario-detail">
+            <div className="card scenario-detail">
               <h3>{activeScenario.name}</h3>
               <p className="muted">{activeScenario.description}</p>
               <div className="scenario-stats">
-                <div>
+                <div className="stat-item">
                   <span className="label">Risk score</span>
-                  <span>{activeScenario.riskScore}</span>
+                  <strong>{activeScenario.riskScore}</strong>
                 </div>
-                <div>
+                <div className="stat-item">
                   <span className="label">Threat level</span>
-                  <span>{activeScenario.type}</span>
+                  <strong>{activeScenario.type}</strong>
                 </div>
               </div>
-              <div>
+              <div className="scenario-meta">
                 <span className="label">Detections triggered</span>
                 <ul className="detections">
                   {activeScenario.detections.map((detection) => (
@@ -379,13 +380,13 @@ const Simulation = ({ scenarios = [], history = [], onIncident, onReset }) => {
                   ))}
                 </ul>
               </div>
-              <div>
+              <div className="scenario-meta">
                 <span className="label">Mitigation</span>
                 <p>{activeScenario.mitigation}</p>
               </div>
             </div>
           ) : (
-            <div className="scenario-placeholder">
+            <div className="card scenario-placeholder">
               <h3>Select a scenario to begin</h3>
               <p className="muted">Choose a simulated attack from the left to generate risk telemetry and incident timeline.</p>
             </div>

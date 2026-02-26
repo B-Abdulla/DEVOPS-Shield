@@ -2,7 +2,19 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import './App.css';
 import './components/EnhancedDataViz.css';
 import './utils/svgFix'; // Import SVG viewBox fix
+import Navbar from './components/Navbar';
+import { VIEWS, NAVIGATION_ITEMS } from './constants/views';
+import BlockchainDashboard from './components/BlockchainDashboard.jsx';
+import AuthBanner from './components/AuthBanner.jsx';
+import LoadingSpinner from './components/LoadingSpinner.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
+import NotificationSystem from './components/NotificationSystem.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import UserProfile from './pages/UserProfile.jsx';
+import ThreatIntel from './pages/ThreatIntel.jsx';
+import Reports from './pages/Reports.jsx';
+import IntegrationsPage from './pages/Integrations.jsx';
+import HelpPage from './pages/Help.jsx';
 import Pipelines from './pages/Pipelines.jsx';
 import AlertsPage from './pages/Alerts.jsx';
 import AuditPage from './pages/Audit.jsx';
@@ -10,11 +22,6 @@ import SettingsPage from './pages/Settings.jsx';
 import ImpactPage from './pages/Impact.jsx';
 import SimulationPage from './pages/Simulation.jsx';
 import GitHubConnect from './pages/GitHubConnect.jsx';
-import BlockchainDashboard from './components/BlockchainDashboard.jsx';
-import AuthBanner from './components/AuthBanner.jsx';
-import LoadingSpinner from './components/LoadingSpinner.jsx';
-import ErrorBoundary from './components/ErrorBoundary.jsx';
-import NotificationSystem from './components/NotificationSystem.jsx';
 import {
   pipelines as pipelineData,
   runsByPipeline as runsData,
@@ -29,84 +36,7 @@ import {
   simulationRiskHistory,
 } from './utils/sampleData.js';
 
-// Constants
-const VIEWS = {
-  DASHBOARD: 'dashboard',
-  PIPELINES: 'pipelines',
-  ALERTS: 'alerts',
-  AUDIT: 'audit',
-  SETTINGS: 'settings',
-  IMPACT: 'impact',
-  SIMULATION: 'simulation',
-  GITHUB: 'github',
-  BLOCKCHAIN: 'blockchain'
-};
-
-const NAVIGATION_ITEMS = [
-  { 
-    id: VIEWS.DASHBOARD, 
-    label: 'Dashboard', 
-    icon: '📊',
-    description: 'Overview and metrics',
-    shortcut: 'Ctrl+D'
-  },
-  { 
-    id: VIEWS.PIPELINES, 
-    label: 'Pipelines', 
-    icon: '🔄',
-    description: 'CI/CD pipeline status',
-    shortcut: 'Ctrl+P'
-  },
-  { 
-    id: VIEWS.ALERTS, 
-    label: 'Alerts', 
-    icon: '🚨',
-    description: 'Security alerts',
-    shortcut: 'Ctrl+A'
-  },
-  { 
-    id: VIEWS.SIMULATION, 
-    label: 'Attack Simulation', 
-    icon: '🧪',
-    description: 'Security simulations',
-    shortcut: 'Ctrl+S'
-  },
-  { 
-    id: VIEWS.BLOCKCHAIN, 
-    label: 'Blockchain Audit', 
-    icon: '⛓️',
-    description: 'Immutable audit trail',
-    shortcut: 'Ctrl+B'
-  },
-  { 
-    id: VIEWS.AUDIT, 
-    label: 'Audit', 
-    icon: '📋',
-    description: 'Audit logs',
-    shortcut: 'Ctrl+L'
-  },
-  { 
-    id: VIEWS.SETTINGS, 
-    label: 'Settings', 
-    icon: '⚙️',
-    description: 'Configuration',
-    shortcut: 'Ctrl+,'
-  },
-  { 
-    id: VIEWS.GITHUB, 
-    label: 'GitHub Connect', 
-    icon: '🔗',
-    description: 'GitHub integration',
-    shortcut: 'Ctrl+G'
-  },
-  { 
-    id: VIEWS.IMPACT, 
-    label: 'Societal Impact', 
-    icon: '🌍',
-    description: 'Impact metrics',
-    shortcut: 'Ctrl+I'
-  }
-];
+// Navigation logic refactored to constants/views.js and components/Navbar.jsx
 
 const App = () => {
   // State management
@@ -124,23 +54,16 @@ const App = () => {
   const [theme, setTheme] = useState('dark');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [keyboardShortcutsEnabled, setKeyboardShortcutsEnabled] = useState(true);
-  
+
   // Refs
   const mainContentRef = useRef(null);
   const notificationTimeoutRef = useRef(null);
 
   // Memoized values
-  const filteredNavItems = useMemo(() => {
-    if (!searchQuery) return NAVIGATION_ITEMS;
-    
-    return NAVIGATION_ITEMS.filter(item => 
-      item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery]);
+  // Navigation items filtering moved to Navbar.jsx
 
   const criticalAlertsCount = useMemo(() => {
-    return alertsState.filter(alert => 
+    return alertsState.filter(alert =>
       alert.severity === 'Critical' && alert.status === 'Open'
     ).length;
   }, [alertsState]);
@@ -160,11 +83,11 @@ const App = () => {
 
     // Initialize keyboard shortcuts
     const handleKeyboardShortcuts = (e) => {
-      if (!keyboardShortcutsEnabled) return;
-      
+      if (!keyboardShortcutsEnabled || !e.key) return;
+
       const ctrlKey = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
-      
+
       if (ctrlKey) {
         switch (key) {
           case 'd':
@@ -185,6 +108,26 @@ const App = () => {
             break;
           case 'u':
             e.preventDefault();
+            setView(VIEWS.USER_PROFILE);
+            break;
+          case 't':
+            e.preventDefault();
+            setView(VIEWS.THREAT_INTEL);
+            break;
+          case 'r':
+            e.preventDefault();
+            setView(VIEWS.REPORTS);
+            break;
+          case 'n':
+            e.preventDefault();
+            setView(VIEWS.INTEGRATIONS);
+            break;
+          case 'h':
+            e.preventDefault();
+            setView(VIEWS.HELP);
+            break;
+          case 'l':
+            e.preventDefault();
             setView(VIEWS.AUDIT);
             break;
           case 'i':
@@ -200,13 +143,12 @@ const App = () => {
             setView(VIEWS.BLOCKCHAIN);
             break;
           default:
-            // Handle other keys if needed
             setSearchQuery('');
             document.getElementById('nav-search')?.focus();
             break;
         }
       }
-      
+
       // Escape to clear search
       if (e.key === 'Escape' && searchQuery) {
         setSearchQuery('');
@@ -234,14 +176,14 @@ const App = () => {
   const addNotification = useCallback((message, type = 'info', duration = 5000) => {
     const id = Date.now().toString();
     const notification = { id, message, type, timestamp: new Date() };
-    
+
     setNotifications(prev => [...prev, notification]);
-    
+
     // Auto-remove notification
     if (notificationTimeoutRef.current) {
       clearTimeout(notificationTimeoutRef.current);
     }
-    
+
     notificationTimeoutRef.current = setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== id));
     }, duration);
@@ -263,7 +205,7 @@ const App = () => {
   const onRunAction = useCallback((action, payload) => {
     setIsLoading(true);
     console.info('Run action', action, payload?.runId);
-    
+
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
@@ -276,7 +218,7 @@ const App = () => {
 
     const alertId = payload.id;
     const updateStatus = (status) => {
-      setAlertsState(prev => prev.map((alert) => 
+      setAlertsState(prev => prev.map((alert) =>
         alert.id === alertId ? { ...alert, status } : alert
       ));
     };
@@ -312,7 +254,7 @@ const App = () => {
   const onExport = useCallback((format, record) => {
     setIsLoading(true);
     console.info('Export', format, record?.id);
-    
+
     // Simulate export process
     setTimeout(() => {
       setIsLoading(false);
@@ -323,19 +265,19 @@ const App = () => {
   const onReconnect = useCallback((provider) => {
     setIsLoading(true);
     console.info('Re-authenticate provider', provider);
-    
+
     const now = new Date().toISOString();
     setAuthState(prev => ({
       ...prev,
       status: 'Connected',
       lastVerification: now
     }));
-    setIntegrationsState(prev => prev.map((integration) => 
+    setIntegrationsState(prev => prev.map((integration) =>
       integration.id === 'github'
         ? { ...integration, status: 'Connected', lastSync: now }
         : integration
     ));
-    
+
     setTimeout(() => {
       setIsLoading(false);
       addNotification(`Successfully reconnected to ${provider}`, 'success');
@@ -350,7 +292,7 @@ const App = () => {
       lastVerification: now,
       scopes: prev.scopes || []
     }));
-    setIntegrationsState(prev => prev.map((integration) => 
+    setIntegrationsState(prev => prev.map((integration) =>
       integration.id === 'github'
         ? { ...integration, status: 'Disconnected', lastSync: now }
         : integration
@@ -368,14 +310,14 @@ const App = () => {
       organization: org || prev.organization,
       lastVerification: now
     }));
-    setIntegrationsState(prev => prev.map((integration) => 
+    setIntegrationsState(prev => prev.map((integration) =>
       integration.id === 'github'
         ? {
-            ...integration,
-            status: 'Connected',
-            lastSync: now,
-            scopes: scopes?.length ? scopes : integration.scopes
-          }
+          ...integration,
+          status: 'Connected',
+          lastSync: now,
+          scopes: scopes?.length ? scopes : integration.scopes
+        }
         : integration
     ));
     addNotification(`Connected to GitHub as ${username}`, 'success');
@@ -391,7 +333,7 @@ const App = () => {
       ? Math.max(0, Math.round(incident.riskScore))
       : 0;
     const severity = normalizedRisk >= 90 ? 'Critical' : normalizedRisk >= 75 ? 'High' : normalizedRisk >= 50 ? 'Medium' : 'Low';
-    
+
     const newAlert = {
       id: incident.id.toLowerCase(),
       pipelineId: incident.pipelineId,
@@ -406,7 +348,7 @@ const App = () => {
     setAlertsState(prev => [newAlert, ...prev.filter(alert => alert.id !== newAlert.id)]);
     setLatestIncident({ ...incident, riskScore: normalizedRisk, severity });
     setSimulationRisk(normalizedRisk);
-    
+
     addNotification(`Simulation incident: ${incident.scenarioName}`, 'warning', 8000);
   }, [addNotification]);
 
@@ -460,6 +402,16 @@ const App = () => {
             {...commonProps}
           />
         );
+      case VIEWS.USER_PROFILE:
+        return <UserProfile {...commonProps} />;
+      case VIEWS.THREAT_INTEL:
+        return <ThreatIntel {...commonProps} />;
+      case VIEWS.REPORTS:
+        return <Reports {...commonProps} />;
+      case VIEWS.INTEGRATIONS:
+        return <IntegrationsPage {...commonProps} />;
+      case VIEWS.HELP:
+        return <HelpPage {...commonProps} />;
       case VIEWS.PIPELINES:
         return (
           <Pipelines
@@ -475,8 +427,8 @@ const App = () => {
         );
       case VIEWS.ALERTS:
         return (
-          <AlertsPage 
-            alerts={alertsState} 
+          <AlertsPage
+            alerts={alertsState}
             onAction={onAlertAction}
             criticalCount={criticalAlertsCount}
             {...commonProps}
@@ -484,8 +436,8 @@ const App = () => {
         );
       case VIEWS.AUDIT:
         return (
-          <AuditPage 
-            records={auditRecords} 
+          <AuditPage
+            records={auditRecords}
             onExport={onExport}
             {...commonProps}
           />
@@ -501,12 +453,16 @@ const App = () => {
             onToggleTheme={toggleTheme}
             keyboardShortcutsEnabled={keyboardShortcutsEnabled}
             onToggleKeyboardShortcuts={() => setKeyboardShortcutsEnabled(prev => !prev)}
+            onUpdateProfile={(updatedUser) => {
+              setAuthState(prev => ({ ...prev, ...updatedUser, account: updatedUser.username }));
+              addNotification('Profile updated', 'success');
+            }}
             {...commonProps}
           />
         );
       case VIEWS.IMPACT:
         return (
-          <ImpactPage 
+          <ImpactPage
             impactMetrics={impactMetrics}
             {...commonProps}
           />
@@ -547,96 +503,35 @@ const App = () => {
       <div className={`shell ${theme} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Loading Overlay */}
         {isLoading && <LoadingSpinner />}
-        
+
         {/* Notification System */}
-        <NotificationSystem 
+        <NotificationSystem
           notifications={notifications}
           onRemove={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
         />
-        
+
         {/* Sidebar Navigation */}
-        <aside className="shell-nav" role="navigation" aria-label="Main navigation">
-          <div className="nav-header">
-            <div className="nav-brand">
-              <span className="brand-icon">🛡️</span>
-              <span className="brand-text">DEVOPS SHIELD</span>
-            </div>
-            <button
-              className="nav-toggle"
-              onClick={toggleSidebar}
-              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              aria-expanded={!sidebarCollapsed}
-            >
-              <span className="toggle-icon">{sidebarCollapsed ? '→' : '←'}</span>
-            </button>
-          </div>
-          
-          {/* Search */}
-          <div className="nav-search">
-            <input
-              id="nav-search"
-              type="text"
-              placeholder="Search navigation..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search navigation items"
-            />
-            <span className="search-icon">🔍</span>
-          </div>
-          
-          {/* Navigation Items */}
-          <nav className="nav-items">
-            {filteredNavItems.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={`nav-link ${item.id === view ? 'active' : ''}`}
-                onClick={() => handleNavigation(item.id)}
-                aria-label={`${item.label} - ${item.description}`}
-                aria-current={item.id === view ? 'page' : undefined}
-                title={`${item.label} (${item.shortcut})`}
-              >
-                <span className="nav-icon" aria-hidden="true">{item.icon}</span>
-                <span className="nav-text">
-                  <span className="nav-label">{item.label}</span>
-                  <span className="nav-description">{item.description}</span>
-                </span>
-                {item.id === VIEWS.ALERTS && criticalAlertsCount > 0 && (
-                  <span className="nav-badge" aria-label={`${criticalAlertsCount} critical alerts`}>
-                    {criticalAlertsCount}
-                  </span>
-                )}
-              </button>
-            ))}
-          </nav>
-          
-          {/* Footer */}
-          <div className="nav-footer">
-            <div className="footer-info">
-              <span className="muted">Immutable by design · {new Date().getFullYear()}</span>
-            </div>
-            <div className="footer-actions">
-              <button
-                className="footer-btn"
-                onClick={toggleTheme}
-                aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-                title={`Toggle theme (${theme === 'dark' ? 'Ctrl+Shift+L' : 'Ctrl+Shift+D'})`}
-              >
-                <span className="theme-icon">{theme === 'dark' ? '☀️' : '🌙'}</span>
-              </button>
-            </div>
-          </div>
-        </aside>
+        <Navbar
+          currentView={view}
+          onNavigate={handleNavigation}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={toggleSidebar}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          criticalAlertsCount={criticalAlertsCount}
+        />
 
         {/* Main Content */}
         <main className="shell-content" ref={mainContentRef} tabIndex="-1">
           <div className="content-container">
-            <AuthBanner 
-              session={authState} 
-              onReconnect={onReconnect} 
+            <AuthBanner
+              session={authState}
+              onReconnect={onReconnect}
               onDisconnect={onDisconnect}
             />
-            
+
             {/* Header */}
             <header className="content-header">
               <div className="header-title">
@@ -656,9 +551,9 @@ const App = () => {
                     {Math.max(0, Math.round(simulationRisk))}% risk
                   </span>
                 </button>
-                <button 
-                  type="button" 
-                  className="btn-primary" 
+                <button
+                  type="button"
+                  className="btn-primary"
                   onClick={() => handleNavigation(VIEWS.GITHUB)}
                   aria-label="Connect GitHub repository"
                 >
@@ -670,7 +565,7 @@ const App = () => {
 
             {/* Incident Banner */}
             {latestIncident && (
-              <section 
+              <section
                 className={`card incident-banner ${latestIncident.severity?.toLowerCase()}`}
                 role="alert"
                 aria-live="polite"
@@ -683,17 +578,17 @@ const App = () => {
                     </p>
                   </div>
                   <div className="incident-banner-actions">
-                    <button 
-                      type="button" 
-                      className="btn-outline" 
+                    <button
+                      type="button"
+                      className="btn-outline"
                       onClick={() => handleNavigation(VIEWS.ALERTS)}
                       aria-label="View all alerts"
                     >
                       Open alerts
                     </button>
-                    <button 
-                      type="button" 
-                      className="btn-outline" 
+                    <button
+                      type="button"
+                      className="btn-outline"
                       onClick={handleSimulationReset}
                       aria-label="Reset simulation"
                     >

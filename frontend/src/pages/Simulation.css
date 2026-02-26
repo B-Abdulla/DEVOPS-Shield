@@ -1,0 +1,138 @@
+/* Simulation Page Styles */
+
+.simulation-page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.simulation-hero {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(15, 23, 42, 0.4));
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.simulation-risk-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.simulation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.simulation-grid>div {
+    background: var(--bg-secondary);
+    border: 1px solid var(--glass-border);
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.simulation-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.simulation-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    min-height: 400px;
+}
+
+.simulation-main {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    padding: 24px;
+}
+
+.simulation-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.scenario-button.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.scenario-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+}
+
+.detections {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detections li::before {
+    content: '→';
+    margin-right: 8px;
+    color: var(--primary);
+}
+
+.event-timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.event-timeline li {
+    display: grid;
+    grid-template-columns: 180px 1fr 180px;
+    gap: 16px;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.4);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 8px 8px 0;
+}
+
+.event-phase {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    color: var(--primary);
+}
+
+.event-time {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: right;
+}
+
+@media (max-width: 1200px) {
+    .simulation-content {
+        grid-template-columns: 1fr;
+    }
+
+    .event-timeline li {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .event-detail {
+        grid-column: span 2;
+    }
+}

@@ -439,7 +439,7 @@ if limiter:
 
 # Trusted host middleware
 default_allowed_hosts = (
-    "localhost,127.0.0.1,*.railway.app,"
+    "localhost,127.0.0.1,testserver,*.railway.app,"
     "*.onrender.com,*.devops-shield.com"
 )
 allowed_hosts = [
@@ -759,14 +759,16 @@ async def websocket_alerts(websocket: WebSocket):
 
 # Mount static files for frontend
 frontend_build_path = Path(__file__).parent.parent / "frontend" / "build"
-if frontend_build_path.exists():
-    app.mount("/static", StaticFiles(directory=str(frontend_build_path / "static")), name="static")
+static_dir = frontend_build_path / "static"
+
+if frontend_build_path.exists() and static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
     assets_dir = frontend_build_path / "assets"
     if assets_dir.exists():
         app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
     logger.info(f"Serving frontend static files from {frontend_build_path}")
 else:
-    logger.warning(f"Frontend build directory not found at {frontend_build_path}")
+    logger.warning(f"Frontend build directory or static files not found at {frontend_build_path}")
 
 
 @app.get("/manifest.json")
@@ -1078,69 +1080,130 @@ def calculate_performance_score(
     return max(0, score)
 
 
-# Performance reset endpoint
-@app.post("/api/performance/reset")
-@limiter.limit("10/minute")
-async def reset_performance(request: Request) -> Dict[str, Any]:
-    """Reset performance metrics"""
-    try:
-        if reset_metrics:
-            reset_metrics()
+if limiter:
+    # Performance reset endpoint
+    @app.post("/api/performance/reset")
+    @limiter.limit("10/minute")
+    async def reset_performance(request: Request) -> Dict[str, Any]:
+        """Reset performance metrics"""
+        try:
+            if reset_metrics:
+                reset_metrics()
 
-        application_state["request_count"] = 0
-        application_state["error_count"] = 0
-        application_state["last_health_check"] = None
+            application_state["request_count"] = 0
+            application_state["error_count"] = 0
+            application_state["last_health_check"] = None
 
-        return {
-            "status": "success",
-            "message": "Performance metrics reset successfully",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-
-    except Exception as err:
-        logger.error(f"Performance reset error: {err}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "status": "error",
-                "error": str(err),
+            return {
+                "status": "success",
+                "message": "Performance metrics reset successfully",
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }
-        )
+
+        except Exception as err:
+            logger.error(f"Performance reset error: {err}")
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "status": "error",
+                    "error": str(err),
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            )
+else:
+    @app.post("/api/performance/reset")
+    async def reset_performance(request: Request) -> Dict[str, Any]:
+        """Reset performance metrics (without rate limiting)"""
+        try:
+            if reset_metrics:
+                reset_metrics()
+
+            application_state["request_count"] = 0
+            application_state["error_count"] = 0
+            application_state["last_health_check"] = None
+
+            return {
+                "status": "success",
+                "message": "Performance metrics reset successfully (no limit)",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+
+        except Exception as err:
+            logger.error(f"Performance reset error: {err}")
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "status": "error",
+                    "error": str(err),
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            )
 
 
-@app.get("/api/security/audit")
-@limiter.limit("30/minute")
-async def security_audit(request: Request) -> Dict[str, Any]:
-    """Security audit information (admin only)"""
-    # In production, add proper authentication check
-    client_ip = get_remote_address(request)
+if limiter:
+    @app.get("/api/security/audit")
+    @limiter.limit("30/minute")
+    async def security_audit(request: Request) -> Dict[str, Any]:
+        """Security audit information (admin only)"""
+        # In production, add proper authentication check
+        client_ip = get_remote_address(request)
 
-    audit_info = {
-        "security_features": {
-            "rate_limiting": "enabled",
-            "security_headers": security_modules_loaded,
-            "request_validation": (
-                security_modules_loaded and
-                RequestValidationMiddleware is not None
+        audit_info = {
+            "security_features": {
+                "rate_limiting": "enabled",
+                "security_headers": security_modules_loaded,
+                "request_validation": (
+                    security_modules_loaded and
+                    RequestValidationMiddleware is not None
+                ),
+                "ip_whitelist": (
+                    os.getenv("IP_WHITELIST_ENABLED", "false")
+                    .lower() == "true"
+                ),
+                "audit_logging": True
+            },
+            "recent_violations": (
+                await security_audit_logger
+                .get_recent_violations(limit=10)
             ),
-            "ip_whitelist": (
-                os.getenv("IP_WHITELIST_ENABLED", "false")
-                .lower() == "true"
-            ),
-            "audit_logging": True
-        },
-        "recent_violations": (
-            await security_audit_logger
-            .get_recent_violations(limit=10)
-        ),
-        "blocked_ips": await security_audit_logger.get_blocked_ips(),
-        "rate_limit_status": "active",
-        "audit_timestamp": datetime.now(timezone.utc).isoformat()
-    }
+            "blocked_ips": await security_audit_logger.get_blocked_ips(),
+            "rate_limit_status": "active",
+            "audit_timestamp": datetime.now(timezone.utc).isoformat()
+        }
 
-    security_audit_logger.log_security_audit_access(client_ip)
-    return audit_info
+        security_audit_logger.log_security_audit_access(client_ip)
+        return audit_info
+else:
+    @app.get("/api/security/audit")
+    async def security_audit(request: Request) -> Dict[str, Any]:
+        """Security audit information (admin only, no limit)"""
+        client_ip = request.client.host if request.client else "unknown"
+
+        audit_info = {
+            "security_features": {
+                "rate_limiting": "disabled",
+                "security_headers": security_modules_loaded,
+                "request_validation": (
+                    security_modules_loaded and
+                    RequestValidationMiddleware is not None
+                ),
+                "ip_whitelist": (
+                    os.getenv("IP_WHITELIST_ENABLED", "false")
+                    .lower() == "true"
+                ),
+                "audit_logging": True
+            },
+            "recent_violations": (
+                await security_audit_logger
+                .get_recent_violations(limit=10)
+            ),
+            "blocked_ips": await security_audit_logger.get_blocked_ips(),
+            "rate_limit_status": "inactive",
+            "audit_timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+        security_audit_logger.log_security_audit_access(client_ip)
+        return audit_info
 
 
 # Helper functions
@@ -1249,19 +1312,22 @@ async def performance_monitoring_middleware(request: Request, call_next):
     start_time = time.time()
 
     # Update active connections
-    ACTIVE_CONNECTIONS.inc()
+    if ACTIVE_CONNECTIONS:
+        ACTIVE_CONNECTIONS.inc()
 
     try:
         response = await call_next(request)
 
         # Record metrics
         duration = time.time() - start_time
-        REQUEST_DURATION.observe(duration)
-        REQUEST_COUNT.labels(
-            method=request.method,
-            endpoint=request.url.path,
-            status=response.status_code
-        ).inc()
+        if REQUEST_DURATION:
+            REQUEST_DURATION.observe(duration)
+        if REQUEST_COUNT:
+            REQUEST_COUNT.labels(
+                method=request.method,
+                endpoint=request.url.path,
+                status=response.status_code
+            ).inc()
 
         # Add performance headers
         response.headers["X-Response-Time"] = f"{duration:.3f}s"
@@ -1271,14 +1337,16 @@ async def performance_monitoring_middleware(request: Request, call_next):
 
     except Exception:
         application_state["error_count"] += 1
-        REQUEST_COUNT.labels(
-            method=request.method,
-            endpoint=request.url.path,
-            status="500"
-        ).inc()
+        if REQUEST_COUNT:
+            REQUEST_COUNT.labels(
+                method=request.method,
+                endpoint=request.url.path,
+                status="500"
+            ).inc()
         raise
     finally:
-        ACTIVE_CONNECTIONS.dec()
+        if ACTIVE_CONNECTIONS:
+            ACTIVE_CONNECTIONS.dec()
 
 
 # Graceful shutdown handling

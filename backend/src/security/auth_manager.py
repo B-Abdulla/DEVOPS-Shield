@@ -13,7 +13,7 @@ except ImportError:
     class HTTPAuthCredentials(BaseModel):
         scheme: str
         credentials: str
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import jwt
 import secrets
 import hashlib
@@ -138,15 +138,16 @@ class TokenManager:
     def create_access_token(cls, user_id: str, username: str, email: str, role: UserRole, mfa_verified: bool = False) -> str:
         """Create JWT access token"""
         try:
-            exp = datetime.utcnow() + timedelta(minutes=cls.ACCESS_TOKEN_EXPIRE_MINUTES)
+            now = datetime.now(timezone.utc)
+            exp = now + timedelta(minutes=cls.ACCESS_TOKEN_EXPIRE_MINUTES)
             payload = {
                 "user_id": user_id,
                 "username": username,
                 "email": email,
                 "role": role.value,
-                "exp": exp.timestamp(),
+                "exp": int(exp.timestamp()),
                 "mfa_verified": mfa_verified,
-                "iat": datetime.utcnow().timestamp(),
+                "iat": int(now.timestamp()),
                 "type": "access"
             }
             token = jwt.encode(payload, cls.SECRET_KEY, algorithm=cls.ALGORITHM)
@@ -159,11 +160,12 @@ class TokenManager:
     def create_refresh_token(cls, user_id: str) -> str:
         """Create JWT refresh token"""
         try:
-            exp = datetime.utcnow() + timedelta(days=cls.REFRESH_TOKEN_EXPIRE_DAYS)
+            now = datetime.now(timezone.utc)
+            exp = now + timedelta(days=cls.REFRESH_TOKEN_EXPIRE_DAYS)
             payload = {
                 "user_id": user_id,
-                "exp": exp.timestamp(),
-                "iat": datetime.utcnow().timestamp(),
+                "exp": int(exp.timestamp()),
+                "iat": int(now.timestamp()),
                 "type": "refresh"
             }
             token = jwt.encode(payload, cls.SECRET_KEY, algorithm=cls.ALGORITHM)
@@ -327,7 +329,7 @@ class AuthenticationManager:
                 email=email,
                 role=role,
                 password_hash=f"{password_hash}:{salt}",  # Store as hash:salt
-                created_at=datetime.utcnow()
+                created_at=datetime.now(timezone.utc)
             )
             
             logger.info(f"User registered: {username}")
@@ -490,6 +492,21 @@ class AuthenticationManager:
             logger.error(f"Password change error: {e}")
             raise HTTPException(status_code=500, detail="Password change failed")
     
+    def update_user_profile(self, user_id: str, username: Optional[str] = None, email: Optional[str] = None) -> Optional[User]:
+        """Update user profile details"""
+        try:
+            from src.services.user_db_service import user_db
+            
+            if user_db.update_user(user_id, username, email):
+                updated_user = user_db.get_user_by_id(user_id)
+                if updated_user:
+                    logger.info(f"User profile updated: {updated_user.username}")
+                    return updated_user
+            return None
+        except Exception as e:
+            logger.error(f"Error updating user profile: {e}")
+            return None
+
     # ===== HELPER METHODS =====
     def _validate_password(self, password: str):
         """Validate password strength"""
@@ -514,22 +531,26 @@ class AuthenticationManager:
             return None
     
     def _get_user_by_id(self, user_id: str) -> Optional[User]:
-        """Get user by ID (in production, fetch from DB)"""
-        # This is a mock - implement with database lookup
-        return None
+        """Get user by ID from database"""
+        try:
+            from src.services.user_db_service import user_db
+            return user_db.get_user_by_id(user_id)
+        except Exception as e:
+            logger.error(f"Error fetching user by ID: {e}")
+            return None
     
     def _record_failed_login(self, username: str):
         """Record failed login attempt"""
         self.failed_logins[username] = self.failed_logins.get(username, 0) + 1
         if self.failed_logins[username] >= self.max_failed_attempts:
             # Lock account
-            self.failed_logins[f"{username}_locked_until"] = datetime.utcnow() + timedelta(minutes=self.lockout_duration)
+            self.failed_logins[f"{username}_locked_until"] = datetime.now(timezone.utc) + timedelta(minutes=self.lockout_duration)
             logger.warning(f"Account locked after {self.max_failed_attempts} failed attempts: {username}")
     
     def _is_locked_out(self, username: str) -> bool:
         """Check if account is locked"""
         locked_until = self.failed_logins.get(f"{username}_locked_until")
-        if locked_until and locked_until > datetime.utcnow():
+        if locked_until and locked_until > datetime.now(timezone.utc):
             return True
         elif locked_until:
             # Lockout expired

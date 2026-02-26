@@ -6,7 +6,7 @@ Tamper-proof logging, blockchain-backed audit logs, and integrity verification
 import json
 import hashlib
 import hmac
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import sqlite3
 from typing import Dict, Any, Optional, List
@@ -24,6 +24,7 @@ class AuditEventType(str, Enum):
     LOGOUT = "logout"
     MFA_ENABLED = "mfa_enabled"
     PASSWORD_CHANGED = "password_changed"
+    USER_UPDATE = "user_update"
     
     # Authorization events
     PERMISSION_DENIED = "permission_denied"
@@ -56,7 +57,7 @@ class AuditLogEntry:
     def __init__(self, event_type: AuditEventType, user_id: str, action: str, 
                  details: Dict[str, Any] = None, ip_address: str = None,
                  status: str = "success"):
-        self.timestamp = datetime.utcnow()
+        self.timestamp = datetime.now(timezone.utc)
         self.event_type = event_type
         self.user_id = user_id
         self.action = action
@@ -266,9 +267,9 @@ class ImmutableAuditLogger:
                 previous_hash = current_hash
             
             # Store verification result
-            check_timestamp = datetime.utcnow().isoformat()
+            check_timestamp = datetime.now(timezone.utc)
             verification_hash = hashlib.sha256(
-                f"{check_timestamp}{len(logs)}{previous_hash}".encode()
+                f"{check_timestamp.isoformat()}{len(logs)}{previous_hash}".encode()
             ).hexdigest()
             
             cursor.execute("""
@@ -276,7 +277,7 @@ class ImmutableAuditLogger:
                 (check_timestamp, total_logs, last_hash, verification_hash, status, tampering_detected)
                 VALUES (?, ?, ?, ?, ?, ?)
             """, (
-                check_timestamp,
+                check_timestamp.isoformat(),
                 len(logs),
                 previous_hash,
                 verification_hash,
@@ -451,6 +452,20 @@ class SecurityAuditLogger:
             status="failure"
         )
         self.immutable_logger.log_event(event)
+
+    def log_event(self, event_type: AuditEventType, user_id: str, action: str, 
+                  details: Dict[str, Any] = None, ip_address: str = None,
+                  status: str = "success"):
+        """Generic event logger"""
+        event = AuditLogEntry(
+            event_type=event_type,
+            user_id=user_id,
+            action=action,
+            details=details or {},
+            ip_address=ip_address,
+            status=status
+        )
+        return self.immutable_logger.log_event(event)
 
 # ===== GLOBAL INSTANCES =====
 immutable_audit_logger = ImmutableAuditLogger()

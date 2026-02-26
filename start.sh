@@ -12,8 +12,8 @@ elif [ -d ".venv" ]; then
   source .venv/bin/activate
 fi
 
-# Ensure backend sources are importable as "src"
-export PYTHONPATH="$(pwd)/backend:${PYTHONPATH:-}"
+# Ensure backend sources are importable as "src" and "backend"
+export PYTHONPATH="$(pwd):$(pwd)/backend:${PYTHONPATH:-}"
 
 # Set default environment variables
 export ENVIRONMENT="${ENVIRONMENT:-production}"

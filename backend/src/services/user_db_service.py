@@ -136,24 +136,88 @@ class UserDatabase:
             if not row:
                 return None
             
-            return User(
-                id=row['id'],
-                username=row['username'],
-                email=row['email'],
-                role=UserRole(row['role']),
-                mfa_enabled=bool(row['mfa_enabled']),
-                mfa_secret=row['mfa_secret'],
-                password_hash=row['password_hash'],
-                is_active=bool(row['is_active']),
-                created_at=datetime.fromisoformat(row['created_at']) if row['created_at'] else None,
-                last_login=datetime.fromisoformat(row['last_login']) if row['last_login'] else None,
-                login_attempts=row['login_attempts'],
-                locked_until=datetime.fromisoformat(row['locked_until']) if row['locked_until'] else None
-            )
+            return self._row_to_user(row)
             
         except Exception as e:
             logger.error(f"Error getting user: {e}")
             return None
+            
+    def get_user_by_id(self, user_id: str) -> Optional[User]:
+        """Get user by ID"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT * FROM users WHERE id = ? AND is_active = 1
+            """, (user_id,))
+            
+            row = cursor.fetchone()
+            conn.close()
+            
+            if not row:
+                return None
+            
+            return self._row_to_user(row)
+            
+        except Exception as e:
+            logger.error(f"Error getting user by ID: {e}")
+            return None
+
+    def update_user(self, user_id: str, username: Optional[str] = None, email: Optional[str] = None) -> bool:
+        """Update user details"""
+        try:
+            updates = []
+            params = []
+            
+            if username:
+                updates.append("username = ?")
+                params.append(username)
+            if email:
+                updates.append("email = ?")
+                params.append(email)
+                
+            if not updates:
+                return True
+                
+            params.append(user_id)
+            query = f"UPDATE users SET {', '.join(updates)} WHERE id = ?"
+            
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute(query, tuple(params))
+            conn.commit()
+            success = cursor.rowcount > 0
+            conn.close()
+            
+            if success:
+                logger.info(f"✓ User updated: {user_id}")
+            return success
+            
+        except sqlite3.IntegrityError as e:
+            logger.error(f"Update failed (integrity error): {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Error updating user: {e}")
+            return False
+
+    def _row_to_user(self, row: sqlite3.Row) -> User:
+        """Convert database row to User object"""
+        return User(
+            id=row['id'],
+            username=row['username'],
+            email=row['email'],
+            role=UserRole(row['role']),
+            mfa_enabled=bool(row['mfa_enabled']),
+            mfa_secret=row['mfa_secret'],
+            password_hash=row['password_hash'],
+            is_active=bool(row['is_active']),
+            created_at=datetime.fromisoformat(row['created_at']) if row['created_at'] else None,
+            last_login=datetime.fromisoformat(row['last_login']) if row['last_login'] else None,
+            login_attempts=row['login_attempts'],
+            locked_until=datetime.fromisoformat(row['locked_until']) if row['locked_until'] else None
+        )
     
     def update_last_login(self, user_id: str):
         """Update user's last login timestamp"""

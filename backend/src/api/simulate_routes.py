@@ -1,41 +1,98 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from datetime import datetime, timezone
 import random
+from typing import Optional
+
+from ..security.auth_manager import get_current_user
+from ..security.audit_logger import security_audit_logger, AuditEventType
 
 # Router prefix is handled in main.py, so we keep this empty
 router = APIRouter() 
 
+SCENARIOS = {
+    "supply-chain": {
+        "message": "Critical supply chain compromise detected: Unknown package version injected into private registry.",
+        "risk_base": 0.85,
+        "flags": ["untrusted_package", "sbom_mismatch", "runner_token_exposed"],
+        "author": "external_adversary_0x",
+        "changes": ["package.json", "scripts/preinstall.sh"]
+    },
+    "secret-leak": {
+        "message": "Security Alert: Highly sensitive PAT string detected in build logs.",
+        "risk_base": 0.70,
+        "flags": ["entropy_threshold_exceeded", "regex_secret_match"],
+        "author": "contractor_dev_88",
+        "changes": ["tests/output.log", "config/settings.yaml"]
+    },
+    "rogue-runner": {
+        "message": "Behavioral Anomaly: Runner executing unrecognized command patterns.",
+        "risk_base": 0.92,
+        "flags": ["behavioral_deviation", "kernel_fingerprint_mismatch", "unrecognized_binary"],
+        "author": "system-runner-334",
+        "changes": ["/dev/shm/payload", "/etc/hosts"]
+    }
+}
+
 @router.get("/")
-@router.get("")  # Handle requests without trailing slash
-async def simulate_fraud_event():
+@router.get("")
+async def simulate_fraud_event(
+    scenario_id: Optional[str] = Query(None, alias="scenario"),
+    current_user: dict = Depends(get_current_user)
+):
     """
-    Generates fake fraud data for the dashboard.
-    Route: GET /api/simulate/ (via main.py inclusion)
+    Generates realistic fraud data based on attack scenarios.
     """
     
-    # 1. Randomize Data
-    event_id = random.randint(1000, 9999)
+    # 1. Select Scenario
+    scenario = SCENARIOS.get(scenario_id)
+    if not scenario and scenario_id:
+        raise HTTPException(status_code=404, detail=f"Scenario '{scenario_id}' not found")
+    
+    # Defaults for random/unknown scenarios
+    selected = scenario or {
+        "message": "Simulated suspicious activity detected",
+        "risk_base": 0.65,
+        "flags": ["generic_suspicion"],
+        "author": "unknown",
+        "changes": ["modified_file.txt"]
+    }
+    
+    # 2. Randomize details
+    event_id = random.randint(5000, 9999)
     commit_suffix = random.randint(10000, 99999)
-    risk_val = round(random.uniform(0.75, 1.0), 2)
     
-    # 2. Build the Event Object
+    # Variance in risk score (+/- 5%)
+    risk_val = round(selected["risk_base"] + random.uniform(-0.05, 0.05), 2)
+    risk_val = max(0.01, min(1.0, risk_val))
+    
+    # 3. Build the Event Object
     event = {
         "event_id": event_id,
+        "scenario_id": scenario_id or "generic",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "risk_score": risk_val,
-        "message": "Simulated fraudulent commit detected",
+        "message": selected["message"],
         "activity": {
             "commit_id": f"sim-{commit_suffix}",
-            "author": "unknown_user",
-            "changes_detected": ["config.yaml", "credentials.txt"],
-            "flags": [
-                "suspicious_file_change",
-                "high_entropy_data"
-            ]
+            "author": selected["author"],
+            "changes_detected": selected["changes"],
+            "flags": selected["flags"]
         }
     }
 
-    # 3. Return it
+    # 4. Log to Security Audit Logger (Real auditing)
+    security_audit_logger.log_threat_detected(
+        user_id=current_user["user_id"],
+        threat_type=f"SIMULATED_{scenario_id.upper() if scenario_id else 'GENERIC'}",
+        severity="High" if risk_val > 0.8 else "Medium",
+        details={
+            "simulation": True,
+            "event_id": event_id,
+            "risk_score": risk_val,
+            "flags": selected["flags"]
+        }
+    )
+
     return {
         "status": "success",
         "fraud_event": event

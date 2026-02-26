@@ -24,15 +24,15 @@ const buildFallbackEvent = () => {
 };
 
 const simulateController = {
-  simulateFraud: async () => {
+  simulateFraud: async (scenarioId = null) => {
     try {
-      // 1. Call the correct Backend URL
-      const response = await apiClient.get("/api/simulate");
+      // 1. Call the correct Backend URL with scenario query param
+      const url = scenarioId ? `/api/simulate?scenario=${scenarioId}` : "/api/simulate";
+      const response = await apiClient.get(url);
 
       // 2. Return the FULL response object 
-      // (This fixes the "reading 'data' of undefined" error in your Dashboard)
-      return response; 
-      
+      return response;
+
     } catch (error) {
       return buildFallbackEvent();
     }

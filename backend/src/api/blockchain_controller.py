@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 blockchain_service = BlockchainAuditService()
 
 # Create router
-router = APIRouter(prefix="/api/blockchain", tags=["blockchain"])
+router = APIRouter(tags=["blockchain"])
 
 
 # ============================================================================

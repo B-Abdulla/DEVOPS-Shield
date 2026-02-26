@@ -18,14 +18,14 @@ router = APIRouter()
 
 # ===== AUTHENTICATION ENDPOINTS =====
 
-@router.post("/auth/register")
+@router.post("/register")
 async def register(username: str, email: str, password: str):
     """
     Register new user
     """
     try:
         user = auth_manager.register_user(username, email, password, UserRole.VIEWER)
-        security_audit_logger.immutable_logger.log_event(
+        security_audit_logger.log_event(
             event_type=AuditEventType.LOGIN_SUCCESS,
             user_id=user.id,
             action=f"User registered: {username}",
@@ -45,7 +45,7 @@ async def register(username: str, email: str, password: str):
         logger.error(f"Registration error: {e}")
         raise HTTPException(status_code=500, detail="Registration failed")
 
-@router.post("/auth/login")
+@router.post("/login")
 async def login(credentials: LoginRequest, request: Request):
     """
     Login user and return tokens
@@ -76,7 +76,7 @@ async def login(credentials: LoginRequest, request: Request):
         logger.error(f"Login error: {e}")
         raise HTTPException(status_code=500, detail="Login failed")
 
-@router.post("/auth/mfa/setup")
+@router.post("/mfa/setup")
 async def setup_mfa(current_user: dict = Depends(get_current_user)):
     """
     Setup MFA for current user
@@ -87,7 +87,7 @@ async def setup_mfa(current_user: dict = Depends(get_current_user)):
         logger.error(f"MFA setup error: {e}")
         raise HTTPException(status_code=500, detail="MFA setup failed")
 
-@router.post("/auth/mfa/verify")
+@router.post("/mfa/verify")
 async def verify_mfa(request: MFAVerifyRequest):
     """
     Verify MFA code and return full access token
@@ -100,7 +100,7 @@ async def verify_mfa(request: MFAVerifyRequest):
         logger.error(f"MFA verification error: {e}")
         raise HTTPException(status_code=500, detail="MFA verification failed")
 
-@router.post("/auth/mfa/enable")
+@router.post("/mfa/enable")
 async def enable_mfa(mfa_code: str, mfa_secret: str, 
                     current_user: dict = Depends(get_current_user)):
     """
@@ -117,7 +117,7 @@ async def enable_mfa(mfa_code: str, mfa_secret: str,
         logger.error(f"Enable MFA error: {e}")
         raise HTTPException(status_code=500, detail="Failed to enable MFA")
 
-@router.post("/auth/change-password")
+@router.post("/change-password")
 async def change_password(request: ChangePasswordRequest, 
                          current_user: dict = Depends(get_current_user)):
     """
@@ -129,7 +129,7 @@ async def change_password(request: ChangePasswordRequest,
             request.current_password,
             request.new_password
         ):
-            security_audit_logger.immutable_logger.log_event(
+            security_audit_logger.log_event(
                 event_type=AuditEventType.PASSWORD_CHANGED,
                 user_id=current_user["user_id"],
                 action=f"Password changed for user {current_user['username']}",
@@ -144,7 +144,7 @@ async def change_password(request: ChangePasswordRequest,
         logger.error(f"Password change error: {e}")
         raise HTTPException(status_code=500, detail="Password change failed")
 
-@router.post("/auth/refresh")
+@router.post("/refresh")
 async def refresh_token(refresh_token: str):
     """
     Refresh access token using refresh token
@@ -174,7 +174,7 @@ async def refresh_token(refresh_token: str):
         logger.error(f"Token refresh error: {e}")
         raise HTTPException(status_code=500, detail="Token refresh failed")
 
-@router.get("/auth/profile")
+@router.get("/profile")
 async def get_profile(current_user: dict = Depends(get_current_user)):
     """
     Get current user profile
@@ -187,13 +187,62 @@ async def get_profile(current_user: dict = Depends(get_current_user)):
         "mfa_verified": current_user.get("mfa_verified")
     }
 
-@router.post("/auth/logout")
+@router.put("/profile")
+async def update_profile(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update user profile
+    """
+    try:
+        data = await request.json()
+        username = data.get("username")
+        email = data.get("email")
+        
+        if not username or not email:
+            raise HTTPException(status_code=400, detail="Username and email are required")
+            
+        updated_user = auth_manager.update_user_profile(
+            current_user["user_id"], 
+            username=username, 
+            email=email
+        )
+        
+        if not updated_user:
+            raise HTTPException(status_code=400, detail="Profile update failed")
+        
+        security_audit_logger.log_event(
+            event_type=AuditEventType.USER_UPDATE,
+            user_id=current_user["user_id"],
+            action=f"User profile updated: {username}",
+            details={"email": email},
+            status="success"
+        )
+        
+        return {
+            "status": "success",
+            "message": "Profile updated successfully",
+            "user": {
+                "user_id": updated_user.id,
+                "username": updated_user.username,
+                "email": updated_user.email,
+                "role": updated_user.role.value
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Profile update error: {e}")
+        raise HTTPException(status_code=500, detail="Profile update failed")
+
+@router.post("/logout")
 async def logout(current_user: dict = Depends(get_current_user)):
     """
     Logout user (log audit event)
     """
     try:
-        security_audit_logger.immutable_logger.log_event(
+        security_audit_logger.log_event(
             event_type=AuditEventType.LOGOUT,
             user_id=current_user["user_id"],
             action=f"User logged out: {current_user['username']}",
