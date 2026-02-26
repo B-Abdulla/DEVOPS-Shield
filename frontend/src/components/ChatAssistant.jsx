@@ -8,7 +8,8 @@ const KNOWLEDGE_BASE = {
     team: "DevOps Shield was developed for the MindSprint 2K25 Hackathon by:\n- Shaik. Muzkeer (Backend & Security)\n- Shaik. Abdul Sammed (Frontend & UI/UX)\n- Suhail. B. K (Blockchain)",
     simulations: "Our Simulation Lab lets you test your defenses with scenarios like:\n- 🧪 Supply-chain corruption\n- 🧪 Secret-leak drills\n- 🧪 Rogue runner attacks",
     blockchain: "We use Blockchain (Ethereum) to create an immutable ledger of every security event. This ensures that audit trails can't be tampered with, even by insiders.",
-    ai: "Our AI engine uses Machine Learning to detect anomalies in pipeline behavior, assigning real-time risk scores to identify fraud before it impacts production."
+    ai: "Our AI engine uses Machine Learning to detect anomalies in pipeline behavior, assigning real-time risk scores to identify fraud before it impacts production.",
+    scenarios: "Our Attack Lab supports 3 advanced scenarios:\n1. **Supply Chain**: Simulates dependency poisoning and hash-mismatch attacks.\n2. **Secret Leak**: Drills for credential exposure in logs and source code.\n3. **Rogue Runner**: Detects unauthorized nodes attempting to join the build cluster."
 };
 
 const ChatAssistant = () => {
@@ -55,6 +56,7 @@ const ChatAssistant = () => {
         if (query.includes('simul') || query.includes('attack') || query.includes('drill')) return KNOWLEDGE_BASE.simulations;
         if (query.includes('blockchain') || query.includes('audit') || query.includes('contract')) return KNOWLEDGE_BASE.blockchain;
         if (query.includes('ai') || query.includes('machine learning') || query.includes('risk')) return KNOWLEDGE_BASE.ai;
+        if (query.includes('scenerio') || query.includes('attack') || query.includes('drill') || query.includes('simul')) return KNOWLEDGE_BASE.scenarios;
 
         return "I'm not sure about that. You can ask me about the project overview, features, tech stack, the team, or our blockchain and AI capabilities! 🤖";
     };
@@ -63,7 +65,8 @@ const ChatAssistant = () => {
         { label: "Overview", query: "Tell me about the project overview" },
         { label: "Features", query: "What are the key features?" },
         { label: "Tech Stack", query: "What technology is used?" },
-        { label: "Blockchain", query: "How is blockchain used?" }
+        { label: "Blockchain", query: "How is blockchain used?" },
+        { label: "Attacks", query: "Tell me about the simulation attacks" }
     ];
 
     return (

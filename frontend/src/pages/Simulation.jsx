@@ -9,20 +9,52 @@ import { formatDateTime } from '../utils/dateHelpers';
 const eventTemplates = {
   'supply-chain': [
     { phase: 'Intelligence', detail: 'Unknown package version uploaded to private registry.' },
+    { phase: 'Hash Verification', detail: 'SHA-256 integrity check failed for @internal/node-core.' },
     { phase: 'Build', detail: 'Dependency Sentinel detects hash mismatch versus SBOM baseline.' },
     { phase: 'Signing', detail: 'Artifact Hardening rejects unsigned binary and quarantines output.' },
+    { phase: 'Blockchain', detail: 'Recording supply-chain breach attempt to Ethereum ledger.' },
     { phase: 'Response', detail: 'Runner token revoked, maintainers alerted, incident ticket created.' }
   ],
   'secret-leak': [
+    { phase: 'Scan', detail: 'Entropy-based secret scanning triggered on build stdout.' },
     { phase: 'Build', detail: 'Log sanitization rules flag PAT string inside test output.' },
+    { phase: 'Identity', detail: 'Verifying actor "contractor-447" against behavioral baseline.' },
     { phase: 'Source Integrity', detail: 'Identity model lowers trust score due to leaked token usage.' },
     { phase: 'Response', detail: 'Credential revoked and SIEM notified for downstream investigation.' }
   ],
   'rogue-runner': [
     { phase: 'Provision', detail: 'New runner joined with unrecognized fingerprint and outdated kernel patches.' },
+    { phase: 'Fingerprinting', detail: 'Hardware ID 0x882f-ac matched against blacklisted VM templates.' },
     { phase: 'Behaviour', detail: 'Behavioral AI flags inconsistent command invocation pattern.' },
     { phase: 'Containment', detail: 'Runner isolated, PKCE challenge re-authenticates maintainer, SOC escalated.' }
   ]
+};
+
+const remediationData = {
+  'supply-chain': {
+    title: 'Supply Chain Hardening',
+    steps: [
+      'Implement SHA-256 pinning for all external dependencies.',
+      'Enable mandatory signed commits and artifact signing.',
+      'Configure private registry to reject overrides of stable versions.'
+    ]
+  },
+  'secret-leak': {
+    title: 'Secret Management Strategy',
+    steps: [
+      'Rotate all affected credentials immediately (Automated).',
+      'Enable pre-commit hooks to block secrets before they reach the CI.',
+      'Migrate to short-lived OIDC tokens for runner authentication.'
+    ]
+  },
+  'rogue-runner': {
+    title: 'Runner Security Policy',
+    steps: [
+      'Enforce hardware-backed identity (TPM) for all private runners.',
+      'Apply egress filtering to block unrecognized outbound connections.',
+      'Scale down the infected runner group and re-image from golden source.'
+    ]
+  }
 };
 
 const Simulation = ({ scenarios = [], history = [], onIncident, onReset }) => {
@@ -426,6 +458,16 @@ const Simulation = ({ scenarios = [], history = [], onIncident, onReset }) => {
             </div>
           </dl>
           <p className="muted">{incidentSummary.message}</p>
+
+          <div className="simulation-remediation glass-panel">
+            <h4>🛡️ High-Yield Remediation</h4>
+            <p className="remediation-title">{remediationData[incidentSummary.scenarioId]?.title}</p>
+            <ul>
+              {remediationData[incidentSummary.scenarioId]?.steps.map((step, i) => (
+                <li key={i}>{step}</li>
+              ))}
+            </ul>
+          </div>
         </section>
       )}
 

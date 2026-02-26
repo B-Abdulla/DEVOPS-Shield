@@ -23,6 +23,7 @@ import SettingsPage from './pages/Settings.jsx';
 import ImpactPage from './pages/Impact.jsx';
 import SimulationPage from './pages/Simulation.jsx';
 import GitHubConnect from './pages/GitHubConnect.jsx';
+import LandingPage from './pages/LandingPage.jsx';
 import {
   pipelines as pipelineData,
   runsByPipeline as runsData,
@@ -55,6 +56,7 @@ const App = () => {
   const [theme, setTheme] = useState('dark');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [keyboardShortcutsEnabled, setKeyboardShortcutsEnabled] = useState(true);
+  const [showLanding, setShowLanding] = useState(true);
 
   // Refs
   const mainContentRef = useRef(null);
@@ -501,114 +503,118 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <div className={`shell ${theme} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-        {/* Loading Overlay */}
-        {isLoading && <LoadingSpinner />}
+      {showLanding ? (
+        <LandingPage onEnter={() => setShowLanding(false)} />
+      ) : (
+        <div className={`shell ${theme} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+          {/* Loading Overlay */}
+          {isLoading && <LoadingSpinner />}
 
-        {/* Notification System */}
-        <NotificationSystem
-          notifications={notifications}
-          onRemove={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
-        />
+          {/* Notification System */}
+          <NotificationSystem
+            notifications={notifications}
+            onRemove={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
+          />
 
-        {/* Sidebar Navigation */}
-        <Navbar
-          currentView={view}
-          onNavigate={handleNavigation}
-          collapsed={sidebarCollapsed}
-          onToggleCollapse={toggleSidebar}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          theme={theme}
-          onToggleTheme={toggleTheme}
-          criticalAlertsCount={criticalAlertsCount}
-        />
+          {/* Sidebar Navigation */}
+          <Navbar
+            currentView={view}
+            onNavigate={handleNavigation}
+            collapsed={sidebarCollapsed}
+            onToggleCollapse={toggleSidebar}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            criticalAlertsCount={criticalAlertsCount}
+          />
 
-        {/* Main Content */}
-        <main className="shell-content" ref={mainContentRef} tabIndex="-1">
-          <div className="content-container">
-            <AuthBanner
-              session={authState}
-              onReconnect={onReconnect}
-              onDisconnect={onDisconnect}
-            />
+          {/* Main Content */}
+          <main className="shell-content" ref={mainContentRef} tabIndex="-1">
+            <div className="content-container">
+              <AuthBanner
+                session={authState}
+                onReconnect={onReconnect}
+                onDisconnect={onDisconnect}
+              />
 
-            {/* Header */}
-            <header className="content-header">
-              <div className="header-title">
-                <h1>{NAVIGATION_ITEMS.find(item => item.id === view)?.label}</h1>
-                <p className="muted">Production-ready CI/CD risk observability</p>
-              </div>
-              <div className="header-actions">
-                <button
-                  type="button"
-                  className={`btn-outline simulate-cta ${simulationRisk > 0 ? 'armed' : ''}`}
-                  onClick={() => handleNavigation(VIEWS.SIMULATION)}
-                  aria-label={`Simulate attack - Current risk: ${Math.max(0, Math.round(simulationRisk))}%`}
-                >
-                  <span className="btn-icon">🧪</span>
-                  <span className="btn-text">Simulate attack</span>
-                  <span className="risk-chip" aria-label={`Risk level: ${Math.max(0, Math.round(simulationRisk))}%`}>
-                    {Math.max(0, Math.round(simulationRisk))}% risk
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={() => handleNavigation(VIEWS.GITHUB)}
-                  aria-label="Connect GitHub repository"
-                >
-                  <span className="btn-icon">🔗</span>
-                  <span className="btn-text">Connect GitHub</span>
-                </button>
-              </div>
-            </header>
-
-            {/* Incident Banner */}
-            {latestIncident && (
-              <section
-                className={`card incident-banner ${latestIncident.severity?.toLowerCase()}`}
-                role="alert"
-                aria-live="polite"
-              >
-                <div className="incident-content">
-                  <div className="incident-header">
-                    <strong>{latestIncident.severity} alert · {latestIncident.id}</strong>
-                    <p className="muted">
-                      Risk {latestIncident.riskScore}% on {latestIncident.pipelineId}. {latestIncident.message}
-                    </p>
-                  </div>
-                  <div className="incident-banner-actions">
-                    <button
-                      type="button"
-                      className="btn-outline"
-                      onClick={() => handleNavigation(VIEWS.ALERTS)}
-                      aria-label="View all alerts"
-                    >
-                      Open alerts
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-outline"
-                      onClick={handleSimulationReset}
-                      aria-label="Reset simulation"
-                    >
-                      Reset
-                    </button>
-                  </div>
+              {/* Header */}
+              <header className="content-header">
+                <div className="header-title">
+                  <h1>{NAVIGATION_ITEMS.find(item => item.id === view)?.label}</h1>
+                  <p className="muted">Production-ready CI/CD risk observability</p>
                 </div>
-              </section>
-            )}
+                <div className="header-actions">
+                  <button
+                    type="button"
+                    className={`btn-outline simulate-cta ${simulationRisk > 0 ? 'armed' : ''}`}
+                    onClick={() => handleNavigation(VIEWS.SIMULATION)}
+                    aria-label={`Simulate attack - Current risk: ${Math.max(0, Math.round(simulationRisk))}%`}
+                  >
+                    <span className="btn-icon">🧪</span>
+                    <span className="btn-text">Simulate attack</span>
+                    <span className="risk-chip" aria-label={`Risk level: ${Math.max(0, Math.round(simulationRisk))}%`}>
+                      {Math.max(0, Math.round(simulationRisk))}% risk
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => handleNavigation(VIEWS.GITHUB)}
+                    aria-label="Connect GitHub repository"
+                  >
+                    <span className="btn-icon">🔗</span>
+                    <span className="btn-text">Connect GitHub</span>
+                  </button>
+                </div>
+              </header>
 
-            {/* Page Content */}
-            <div className="content-body">
-              <ErrorBoundary>
-                {renderContent()}
-              </ErrorBoundary>
+              {/* Incident Banner */}
+              {latestIncident && (
+                <section
+                  className={`card incident-banner ${latestIncident.severity?.toLowerCase()}`}
+                  role="alert"
+                  aria-live="polite"
+                >
+                  <div className="incident-content">
+                    <div className="incident-header">
+                      <strong>{latestIncident.severity} alert · {latestIncident.id}</strong>
+                      <p className="muted">
+                        Risk {latestIncident.riskScore}% on {latestIncident.pipelineId}. {latestIncident.message}
+                      </p>
+                    </div>
+                    <div className="incident-banner-actions">
+                      <button
+                        type="button"
+                        className="btn-outline"
+                        onClick={() => handleNavigation(VIEWS.ALERTS)}
+                        aria-label="View all alerts"
+                      >
+                        Open alerts
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-outline"
+                        onClick={handleSimulationReset}
+                        aria-label="Reset simulation"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* Page Content */}
+              <div className="content-body">
+                <ErrorBoundary>
+                  {renderContent()}
+                </ErrorBoundary>
+              </div>
             </div>
-          </div>
-        </main>
-      </div>
+          </main>
+        </div>
+      )}
 
       {/* Project Assistant Chatbot - Global Viewport Relative */}
       <ChatAssistant />
