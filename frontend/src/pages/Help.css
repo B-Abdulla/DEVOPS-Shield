@@ -1,0 +1,141 @@
+.help-page {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.help-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+.help-grid .card {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    transition: transform 0.2s;
+}
+
+.help-grid .card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary);
+}
+
+.card-icon {
+    font-size: 2.5rem;
+}
+
+.help-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.help-links li a {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.help-links li a:hover {
+    text-decoration: underline;
+}
+
+/* FAQ Section */
+.faq-section {
+    padding: 30px;
+}
+
+.faq-list {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.faq-item {
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.2s;
+}
+
+.faq-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.faq-question {
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.faq-answer {
+    padding: 0 20px 20px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    animation: slideDown 0.3s ease-out;
+}
+
+/* Footer Section */
+.help-footer {
+    margin-top: 30px;
+    padding: 24px;
+    text-align: center;
+}
+
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.footer-content p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.btn-primary-sm {
+    padding: 8px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-outline-sm {
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -24,6 +24,7 @@ import ImpactPage from './pages/Impact.jsx';
 import SimulationPage from './pages/Simulation.jsx';
 import GitHubConnect from './pages/GitHubConnect.jsx';
 import LandingPage from './pages/LandingPage.jsx';
+import RiskAnalysis from './pages/RiskAnalysis.jsx';
 import {
   pipelines as pipelineData,
   runsByPipeline as runsData,
@@ -413,6 +414,8 @@ const App = () => {
         return <Reports {...commonProps} />;
       case VIEWS.INTEGRATIONS:
         return <IntegrationsPage {...commonProps} />;
+      case VIEWS.RISK_ANALYSIS:
+        return <RiskAnalysis />;
       case VIEWS.HELP:
         return <HelpPage {...commonProps} />;
       case VIEWS.PIPELINES:

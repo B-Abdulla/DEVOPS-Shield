@@ -13,6 +13,7 @@ export const VIEWS = {
     REPORTS: 'reports',
     INTEGRATIONS: 'integrations',
     HELP: 'help',
+    RISK_ANALYSIS: 'risk_analysis',
 };
 
 export const NAVIGATION_ITEMS = [
@@ -57,6 +58,13 @@ export const NAVIGATION_ITEMS = [
         icon: '❓',
         description: 'Help & support',
         shortcut: 'Ctrl+H'
+    },
+    {
+        id: VIEWS.RISK_ANALYSIS,
+        label: 'Risk Analysis',
+        icon: '📈',
+        description: 'Risk vs Commits analysis',
+        shortcut: 'Ctrl+X'
     },
     {
         id: VIEWS.PIPELINES,
