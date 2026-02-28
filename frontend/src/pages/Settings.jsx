@@ -132,7 +132,7 @@ const SettingsPage = ({ integrations = [], policies = [], authSession, securityH
             <h2>Integrations</h2>
             <p className="muted">Connect code hosts, CI engines, and ticketing systems.</p>
           </div>
-          <button type="button" className="btn-outline">Add integration</button>
+          <button type="button" className="btn-outline" onClick={() => onManageIntegrations?.()}>Add integration</button>
         </header>
         <table>
           <thead>

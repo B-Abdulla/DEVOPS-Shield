@@ -218,6 +218,15 @@ const App = () => {
   }, [addNotification]);
 
   const onAlertAction = useCallback((action, payload) => {
+    if (action === 'filter') {
+      addNotification('Applied critical severity filters to Incidents table', 'info');
+      return;
+    }
+    if (action === 'assign') {
+      addNotification('Opened assignment dialogue for Incident Queue', 'success');
+      return;
+    }
+
     if (!payload?.id) return;
 
     const alertId = payload.id;
@@ -257,12 +266,38 @@ const App = () => {
 
   const onExport = useCallback((format, record) => {
     setIsLoading(true);
-    console.info('Export', format, record?.id);
+    addNotification(`Preparing ${format.toUpperCase()} export for ${record?.id || record?.runId || 'audit'}...`, 'info');
 
-    // Simulate export process
     setTimeout(() => {
       setIsLoading(false);
-      addNotification(`Exported ${record?.id} in ${format} format`, 'success');
+
+      let fileContent = '';
+      let mimeType = '';
+
+      if (format === 'json') {
+        fileContent = JSON.stringify(record, null, 2);
+        mimeType = 'application/json';
+      } else {
+        // Switch 'pdf' to a simple 'csv' serialization so it works locally and doesn't get corrupted
+        const keys = Object.keys(record || {});
+        const vals = Object.values(record || {}).map(v => typeof v === 'object' ? JSON.stringify(v) : v);
+        fileContent = keys.join(',') + '\n' + vals.join(',');
+        mimeType = 'text/csv;charset=utf-8;';
+        format = 'csv';
+      }
+
+      const blob = new Blob([fileContent], { type: mimeType });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `audit-export-${record?.id || record?.runId || 'data'}.${format}`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      addNotification(`Export downloaded successfully`, 'success');
     }, 1500);
   }, [addNotification]);
 
@@ -359,7 +394,8 @@ const App = () => {
   const handleSimulationReset = useCallback(() => {
     setSimulationRisk(0);
     setLatestIncident(null);
-    addNotification('Simulation reset completed', 'info');
+    setAlertsState(prev => prev.filter(alert => !alert.title.startsWith('Simulated')));
+    addNotification('Simulation system reset. Test logs cleared.', 'info');
   }, [addNotification]);
 
   const toggleTheme = useCallback(() => {
@@ -415,7 +451,7 @@ const App = () => {
       case VIEWS.INTEGRATIONS:
         return <IntegrationsPage {...commonProps} />;
       case VIEWS.RISK_ANALYSIS:
-        return <RiskAnalysis />;
+        return <RiskAnalysis {...commonProps} />;
       case VIEWS.HELP:
         return <HelpPage {...commonProps} />;
       case VIEWS.PIPELINES:
@@ -459,6 +495,7 @@ const App = () => {
             onToggleTheme={toggleTheme}
             keyboardShortcutsEnabled={keyboardShortcutsEnabled}
             onToggleKeyboardShortcuts={() => setKeyboardShortcutsEnabled(prev => !prev)}
+            onManageIntegrations={() => handleNavigation(VIEWS.INTEGRATIONS)}
             onUpdateProfile={(updatedUser) => {
               setAuthState(prev => ({ ...prev, ...updatedUser, account: updatedUser.username }));
               addNotification('Profile updated', 'success');

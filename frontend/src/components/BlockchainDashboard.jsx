@@ -17,7 +17,7 @@ const BlockchainDashboard = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/blockchain/stats`);
       if (!response.ok) throw new Error('Failed to fetch blockchain stats');
-      
+
       const data = await response.json();
       setBlockchainStats(data.stats);
       setError(null);
@@ -32,7 +32,7 @@ const BlockchainDashboard = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/blockchain/health`);
       if (!response.ok) throw new Error('Failed to fetch health status');
-      
+
       const data = await response.json();
       setHealthStatus(data);
     } catch (err) {
@@ -45,15 +45,15 @@ const BlockchainDashboard = () => {
   const fetchAuditTrail = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Build query parameters
       const params = new URLSearchParams();
       if (filterSeverity) params.append('severity', filterSeverity);
       if (filterRepository) params.append('repository', filterRepository);
-      
-      const response = await fetch(`${API_BASE_URL}/api/blockchain/audit?${params}`);
+
+      const response = await fetch(`${API_BASE_URL}/api/blockchain/audit-trail?${params}`);
       if (!response.ok) throw new Error('Failed to fetch audit trail');
-      
+
       const data = await response.json();
       setAuditTrail(data.audit_trail || []);
       setError(null);
@@ -159,27 +159,27 @@ const BlockchainDashboard = () => {
             <div className="stat-label">Provider</div>
             <div className="stat-value">{blockchainStats.provider?.split('/').pop() || 'Local'}</div>
           </div>
-          
+
           <div className="stat-card">
             <div className="stat-label">Network</div>
             <div className="stat-value">{blockchainStats.network || 'Unknown'}</div>
           </div>
-          
+
           <div className="stat-card">
             <div className="stat-label">Chain ID</div>
             <div className="stat-value">{blockchainStats.chain_id || 'N/A'}</div>
           </div>
-          
+
           <div className="stat-card">
             <div className="stat-label">Block Number</div>
             <div className="stat-value">{blockchainStats.block_number?.toLocaleString() || 'N/A'}</div>
           </div>
-          
+
           <div className="stat-card highlight">
             <div className="stat-label">Logged Events</div>
             <div className="stat-value">{blockchainStats.event_count || 0}</div>
           </div>
-          
+
           <div className="stat-card highlight">
             <div className="stat-label">Audit Reports</div>
             <div className="stat-value">{blockchainStats.report_count || 0}</div>

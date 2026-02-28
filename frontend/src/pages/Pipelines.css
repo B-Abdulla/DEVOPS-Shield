@@ -1,10 +1,6 @@
-/* Premium Pipelines Styling */
-
-.pipelines-grid {
-    display: grid;
-    grid-template-columns: 380px 1fr;
-    gap: 24px;
-    align-items: start;
+/* Premium Accordion Pipelines Styling */
+.pipelines-fullscreen {
+    width: 100%;
     animation: fadeIn 0.5s ease-out;
 }
 
@@ -15,12 +11,22 @@
     border-radius: 20px;
     padding: 0;
     overflow: hidden;
+    height: calc(100vh - 180px);
+    /* Bounded scrolling */
+    display: flex;
+    flex-direction: column;
+}
+
+.pipeline-list-body {
+    overflow-y: auto;
+    flex: 1;
 }
 
 .pipeline-list .card-header {
     padding: 1.5rem;
     background: rgba(255, 255, 255, 0.02);
     border-bottom: 1px solid var(--glass-border);
+    flex-shrink: 0;
 }
 
 .list-controls {
@@ -29,6 +35,7 @@
     gap: 10px;
     background: rgba(0, 0, 0, 0.2);
     border-bottom: 1px solid var(--glass-border);
+    flex-shrink: 0;
 }
 
 .search-input {
@@ -50,57 +57,59 @@
     font-size: 0.8rem;
 }
 
-/* Pipeline Row Beautification */
-.pipeline-row {
-    padding: 1.25rem 1.5rem;
+/* Accordion Row */
+.pipeline-row-accordion {
     border-bottom: 1px solid var(--glass-border);
     cursor: pointer;
     transition: all var(--transition-normal);
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 12px;
 }
 
-.pipeline-row:hover {
+.pipeline-row-accordion:hover {
     background: rgba(14, 165, 233, 0.05);
 }
 
-.pipeline-row.active {
-    background: rgba(14, 165, 233, 0.08);
+.pipeline-row-accordion.expanded-row {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), transparent);
     border-left: 4px solid var(--primary);
 }
 
-.row-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.row-header h3 {
-    font-size: 1.1rem;
-    margin: 0;
-    color: var(--text-primary);
-}
-
-.status-icon {
-    font-size: 1rem;
-}
-
-.row-meta {
+.accordion-header {
+    padding: 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
+.pipeline-row-main h3 {
+    font-size: 1.2rem;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.accordion-meta-cluster {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.expand-indicator {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    width: 20px;
+    text-align: center;
+}
+
 .row-tags {
     display: flex;
-    gap: 6px;
+    gap: 8px;
 }
 
 .row-tag {
-    font-size: 0.65rem;
-    padding: 2px 8px;
+    font-size: 0.7rem;
+    padding: 4px 10px;
     border-radius: 999px;
     background: rgba(148, 163, 184, 0.1);
     color: var(--text-secondary);
@@ -123,70 +132,149 @@
     color: var(--success);
 }
 
-/* Pipeline Detail Polish */
-.pipeline-detail-premium {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+/* Accordion Body / Inline Run History */
+.accordion-body {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    animation: slideDown 0.3s ease-out;
 }
 
-.detail-hero-card {
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(15, 23, 42, 0.9));
-    border: 1px solid var(--primary-glow);
-    padding: 40px;
-    border-radius: 24px;
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.glass-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+}
+
+.run-history-inline {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    padding: 20px;
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+    margin-top: 10px;
+}
+
+.inline-title {
+    margin: 0 0 16px 0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.run-list-inline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.run-item button {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.run-item button:hover {
+    background: rgba(14, 165, 233, 0.1);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.run-list-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: relative;
-    overflow: hidden;
+    width: 100%;
 }
 
-.detail-hero-card::after {
-    content: '';
-    position: absolute;
-    right: -50px;
-    top: -50px;
-    width: 200px;
-    height: 200px;
-    background: var(--primary-glow);
-    filter: blur(80px);
-    z-index: 0;
-}
-
-.hero-info {
-    position: relative;
-    z-index: 1;
-}
-
-.hero-info h2 {
-    font-size: 2.2rem;
-    margin-bottom: 10px;
-}
-
-.hero-viz {
-    text-align: right;
-    position: relative;
-    z-index: 1;
-}
-
-.viz-score {
-    font-size: 3.5rem;
-    font-weight: 900;
-    color: var(--primary);
-    line-height: 1;
-}
-
-.viz-label {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+.run-id-badge {
+    font-family: 'JetBrains Mono', monospace;
     font-weight: 700;
-    opacity: 0.8;
+    color: var(--text-primary);
+}
+
+.run-date {
+    font-size: 0.8rem;
+}
+
+/* Restored PipelineDetail Inner Grid */
+.detail-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.run-history-sidebar {
+    padding: 0;
+    position: sticky;
+    top: 0;
+}
+
+.mb-2 {
+    margin-bottom: 1rem;
+}
+
+.run-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.run-item button,
+.active-run-item button {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.run-item button:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--glass-border);
+}
+
+.active-run-item button {
+    background: rgba(14, 165, 233, 0.1);
+    border-color: var(--primary);
 }
 
 @media (max-width: 1100px) {
-    .pipelines-grid {
-        grid-template-columns: 1fr;
+    .pipelines-fullscreen {
+        height: auto;
+    }
+
+    .pipeline-list {
+        height: 600px;
     }
 }

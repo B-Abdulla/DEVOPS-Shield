@@ -27,9 +27,9 @@ const Navbar = ({
             role="navigation"
             aria-label="Main navigation"
         >
-            <div className="nav-header">
+            <div className={`nav-header ${collapsed ? 'collapsed' : ''}`}>
                 <div className="nav-brand">
-                    <span className="brand-icon">🛡️</span>
+                    <span className="brand-icon" title="DevOps Shield">🛡️</span>
                     {!collapsed && <span className="brand-text">DEVOPS SHIELD</span>}
                 </div>
                 <button
@@ -99,6 +99,7 @@ const Navbar = ({
                         onClick={onToggleTheme}
                         aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
                         title={`Toggle theme`}
+                        style={collapsed ? { margin: '0 auto' } : {}}
                     >
                         <span className="theme-icon">{theme === 'dark' ? '☀️' : '🌙'}</span>
                     </button>

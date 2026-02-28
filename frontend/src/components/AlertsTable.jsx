@@ -10,8 +10,8 @@ const AlertsTable = ({ alerts = [], onAction }) => (
         <p className="muted">Prioritized queue: acknowledge, quarantine, or open ticket.</p>
       </div>
       <div className="alerts-actions">
-        <button type="button" className="btn-outline">Filter critical</button>
-        <button type="button" className="btn-outline">Assign</button>
+        <button type="button" className="btn-outline" onClick={() => onAction?.('filter')}>Filter critical</button>
+        <button type="button" className="btn-outline" onClick={() => onAction?.('assign')}>Assign</button>
       </div>
     </header>
     <table>
@@ -36,25 +36,25 @@ const AlertsTable = ({ alerts = [], onAction }) => (
 
           return (
             <tr key={alert.id}>
-            <td>
-              <strong>{alert.title}</strong>
-              <div className="muted">{alert.id}</div>
-            </td>
-            <td>{alert.pipelineId}</td>
-            <td>{alert.severity}</td>
-            <td><RiskBadge score={alert.riskScore} size="sm" /></td>
-            <td><span className={statusClass}>{statusLabel}</span></td>
-            <td>{formatDateTime(alert.createdAt)}</td>
-            <td>{alert.impact}</td>
-            <td className="alerts-actions-cell">
-              <button type="button" className="btn-link" onClick={() => onAction?.('ack', alert)}>Acknowledge</button>
-              <button type="button" className="btn-link" onClick={() => onAction?.('rollback', alert)}>Rollback</button>
-              <button type="button" className="btn-link" onClick={() => onAction?.('ticket', alert)}>Create ticket</button>
-              {statusLabel !== 'Resolved' && (
-                <button type="button" className="btn-link" onClick={() => onAction?.('resolve', alert)}>Resolve</button>
-              )}
-            </td>
-          </tr>
+              <td>
+                <strong>{alert.title}</strong>
+                <div className="muted">{alert.id}</div>
+              </td>
+              <td>{alert.pipelineId}</td>
+              <td>{alert.severity}</td>
+              <td><RiskBadge score={alert.riskScore} size="sm" /></td>
+              <td><span className={statusClass}>{statusLabel}</span></td>
+              <td>{formatDateTime(alert.createdAt)}</td>
+              <td>{alert.impact}</td>
+              <td className="alerts-actions-cell">
+                <button type="button" className="btn-link" onClick={() => onAction?.('ack', alert)}>Acknowledge</button>
+                <button type="button" className="btn-link" onClick={() => onAction?.('rollback', alert)}>Rollback</button>
+                <button type="button" className="btn-link" onClick={() => onAction?.('ticket', alert)}>Create ticket</button>
+                {statusLabel !== 'Resolved' && (
+                  <button type="button" className="btn-link" onClick={() => onAction?.('resolve', alert)}>Resolve</button>
+                )}
+              </td>
+            </tr>
           );
         })}
       </tbody>
