@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Reports.css';
 
-const MOCK_REPORTS = [
+const INITIAL_REPORTS = [
   {
     id: 'rep-001',
     title: 'Weekly SOC2 Compliance Audit',
@@ -37,15 +37,37 @@ const MOCK_REPORTS = [
 ];
 
 const Reports = ({ addNotification }) => {
+  const [reports, setReports] = useState(INITIAL_REPORTS);
   const [downloading, setDownloading] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerate = () => {
+    setIsGenerating(true);
+    addNotification('Started new report generation task...', 'info');
+
+    setTimeout(() => {
+      const newReportId = `rep-${Math.floor(Math.random() * 900) + 100}`;
+      const newReport = {
+        id: newReportId,
+        title: 'Ad-hoc Security & Compliance Scan',
+        date: new Date().toISOString().split('T')[0],
+        status: 'Ready',
+        size: `${(Math.random() * 5 + 1).toFixed(1)} MB`,
+        type: 'PDF'
+      };
+
+      setReports(prev => [newReport, ...prev]);
+      setIsGenerating(false);
+      addNotification(`Report ${newReportId} generated successfully.`, 'success');
+    }, 2500);
+  };
 
   const handleDownload = (id) => {
     setDownloading(id);
     addNotification('Preparing report file for download...', 'info');
 
-    // MOCK FILE GENERATION AND TRIGGER DOWNLOAD
     setTimeout(() => {
-      const reportMeta = MOCK_REPORTS.find(r => r.id === id) || { type: 'JSON' };
+      const reportMeta = reports.find(r => r.id === id) || { type: 'JSON' };
       const extension = reportMeta.type.toLowerCase();
 
       let fileContent = '';
@@ -84,30 +106,53 @@ const Reports = ({ addNotification }) => {
           <p className="page-subtitle">Generate, view, and export compliance and security reports.</p>
         </div>
         <button
-          className="btn-primary enhance-hover"
-          onClick={() => addNotification('Started new report generation task', 'success')}
+          className={`btn-primary enhance-hover ${isGenerating ? 'loading' : ''}`}
+          onClick={handleGenerate}
+          disabled={isGenerating}
         >
-          <span className="btn-icon">➕</span> Generate New Report
+          {isGenerating ? (
+            <span className="spinner">⚙️ Generating...</span>
+          ) : (
+            <><span className="btn-icon">➕</span> Generate New Report</>
+          )}
         </button>
       </header>
 
       <section className="reports-grid">
         <div className="card overview-card reports-stat">
-          <div className="stat-icon">📄</div>
+          <div className="stat-icon svg-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </div>
           <div>
-            <h3>24</h3>
-            <p className="muted">Reports Generated (30d)</p>
+            <h3>{reports.length}</h3>
+            <p className="muted">Reports Generated (Total)</p>
           </div>
         </div>
         <div className="card overview-card reports-stat">
-          <div className="stat-icon">✅</div>
+          <div className="stat-icon svg-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <polyline points="9 12 11 14 15 10"></polyline>
+            </svg>
+          </div>
           <div>
             <h3>100%</h3>
             <p className="muted">Compliance Score</p>
           </div>
         </div>
         <div className="card overview-card reports-stat">
-          <div className="stat-icon">🕒</div>
+          <div className="stat-icon svg-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
           <div>
             <h3>Scheduled</h3>
             <p className="muted">Next auto-run in 2 days</p>
@@ -138,7 +183,7 @@ const Reports = ({ addNotification }) => {
               </tr>
             </thead>
             <tbody>
-              {MOCK_REPORTS.map(report => (
+              {reports.map(report => (
                 <tr key={report.id}>
                   <td>
                     <strong>{report.title}</strong>

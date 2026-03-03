@@ -41,23 +41,25 @@ const PipelineRow = ({ pipeline, runs, isExpanded, activeRunId, onSelect, onSele
           </div>
 
           <RiskBadge score={pipeline.lastRiskScore} level={pipeline.lastRiskLevel} size="sm" />
+        </div>
 
-          <div className="expand-indicator">
-            {isExpanded ? '▼' : '▶'}
-          </div>
+        <div className="expand-indicator">
+          {isExpanded ? '▼' : '▶'}
         </div>
       </div>
 
       {isExpanded && (
-        <div className="accordion-body glass-panel" style={{ background: 'transparent', padding: '0 1.5rem 1.5rem', border: 'none', boxShadow: 'none' }}>
-          <PipelineDetail
-            inlineMode={true}
-            pipeline={pipeline}
-            runs={runs}
-            activeRunId={activeRunId}
-            onSelectRun={onSelectRun}
-            onAction={onAction}
-          />
+        <div className="accordion-body">
+          <div className="glass-panel" style={{ padding: '0', border: 'none', boxShadow: 'none', background: 'transparent' }}>
+            <PipelineDetail
+              inlineMode={true}
+              pipeline={pipeline}
+              runs={runs}
+              activeRunId={activeRunId}
+              onSelectRun={onSelectRun}
+              onAction={onAction}
+            />
+          </div>
         </div>
       )}
     </div>

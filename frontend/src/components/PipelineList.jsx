@@ -24,13 +24,7 @@ const PipelineList = ({ pipelines = [], runs = {}, activePipelineId, activeRunId
   }, [pipelines, searchTerm, sortBy]);
 
   return (
-    <section className="card pipeline-list">
-      <header className="card-header">
-        <div>
-          <h2>Pipelines</h2>
-          <p className="muted" style={{ fontSize: '0.8rem' }}>Monitor the risk posture of every CI/CD workflow.</p>
-        </div>
-      </header>
+    <section className="pipeline-list">
 
       <div className="list-controls">
         <input

@@ -32,15 +32,6 @@ const Navbar = ({
                     <span className="brand-icon" title="DevOps Shield">🛡️</span>
                     {!collapsed && <span className="brand-text">DEVOPS SHIELD</span>}
                 </div>
-                <button
-                    className="nav-toggle"
-                    onClick={onToggleCollapse}
-                    aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                    aria-expanded={!collapsed}
-                    title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-                >
-                    <span className="toggle-icon">{collapsed ? '☰' : '«'}</span>
-                </button>
             </div>
 
             {/* Search */}
@@ -49,7 +40,7 @@ const Navbar = ({
                     <input
                         id="nav-search"
                         type="text"
-                        placeholder="Search..."
+                        placeholder="Search (Ctrl+K)..."
                         value={searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
                         aria-label="Search navigation items"

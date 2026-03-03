@@ -82,11 +82,27 @@ const PipelineDetail = ({ pipeline, runs = [], activeRunId, onSelectRun, onActio
             )}
 
             <div className="evidence-links">
-              <a href={selectedRun?.evidence?.logsUrl} target="_blank" rel="noreferrer" className="btn-outline-sm">📄 View Logs</a>
-              <a href={selectedRun?.evidence?.diffUrl} target="_blank" rel="noreferrer" className="btn-outline-sm">🔀 Inspect Diff</a>
-              {selectedRun?.evidence?.scaUrl && (
-                <a href={selectedRun.evidence.scaUrl} target="_blank" rel="noreferrer" className="btn-outline-sm">🛡️ SCA Report</a>
-              )}
+              <button
+                type="button"
+                className="evidence-btn"
+                onClick={() => onAction?.('viewLogs', selectedRun)}
+              >
+                <span className="icon">📄</span> View Logs
+              </button>
+              <button
+                type="button"
+                className="evidence-btn"
+                onClick={() => onAction?.('inspectDiff', selectedRun)}
+              >
+                <span className="icon">🔀</span> Inspect Diff
+              </button>
+              <button
+                type="button"
+                className="evidence-btn"
+                onClick={() => onAction?.('scaReport', selectedRun)}
+              >
+                <span className="icon">🛡️</span> SCA Report
+              </button>
             </div>
           </section>
 
