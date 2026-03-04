@@ -613,18 +613,19 @@ const App = () => {
         impact: incident.message || "Automated drill impact pending review",
       };
 
-      setAlertsState((prev) => [
-        newAlert,
-        ...prev.filter((alert) => alert.id !== newAlert.id),
-      ]);
-      setLatestIncident({ ...incident, riskScore: normalizedRisk, severity });
+      if (severity === "High" || severity === "Critical") {
+        setAlertsState((prev) => [
+          newAlert,
+          ...prev.filter((alert) => alert.id !== newAlert.id),
+        ]);
+        addNotification(
+          `Simulation incident: ${incident.scenarioName}`,
+          "warning",
+          8000
+        );
+        setLatestIncident({ ...incident, riskScore: normalizedRisk, severity });
+      }
       setSimulationRisk(normalizedRisk);
-
-      addNotification(
-        `Simulation incident: ${incident.scenarioName}`,
-        "warning",
-        8000,
-      );
     },
     [addNotification],
   );
@@ -825,7 +826,7 @@ const App = () => {
           <main className="shell-content" ref={mainContentRef} tabIndex="-1">
             <div className="content-container">
               {/* Header - Hidden for Blockchain view to avoid redundancy with its premium internal header */}
-              {view !== VIEWS.BLOCKCHAIN && (
+              {view !== VIEWS.BLOCKCHAIN && view !== VIEWS.SIMULATION && (
                 <header className="content-header">
                   <div className="header-title-container">
                     <div className="header-title">

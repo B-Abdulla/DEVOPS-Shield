@@ -1,6 +1,6 @@
 // Use relative URL for production (same origin) or env variable for development
 const API_URL = process.env.REACT_APP_API_URL || (
-  process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000'
+  process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8080'
 );
 
 class ApiClient {
