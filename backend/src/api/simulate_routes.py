@@ -11,6 +11,7 @@ router = APIRouter()
 
 import os
 import json
+from .pipelines_controller import add_simulation_run
 
 # Define the data path
 DATA_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'intelligence')
@@ -157,6 +158,15 @@ async def simulate_fraud_event(
             "flags": selected["flags"]
         }
     )
+
+    # 5. Link to Pipelines (New integration)
+    pipeline_map = {
+        "supply-chain": "edge-security",
+        "secret-leak": "frontend-ci",
+        "rogue-runner": "payments-cd"
+    }
+    target_pipeline = pipeline_map.get(scenario_id, "backend")
+    add_simulation_run(target_pipeline, scenario_id or "generic", risk_val)
 
     return {
         "status": "success",

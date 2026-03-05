@@ -323,6 +323,13 @@ const Simulation = ({ scenarios = [], history = [], onIncident, onReset, current
       setIncidentSummary(incident);
       setCurrentRiskScore(finalRiskScore);
       onIncident?.(incident);
+
+      // Trigger popup for High/Critical scores
+      if (finalRiskScore >= 75) {
+        setTimeout(() => {
+          window.alert(`🚨 ${finalRiskScore >= 90 ? 'CRITICAL' : 'HIGH'} RISK DETECTED!\nScenario: ${scenario.name}\nRisk Score: ${finalRiskScore}%`);
+        }, 500);
+      }
     }
   };
 
@@ -357,6 +364,11 @@ const Simulation = ({ scenarios = [], history = [], onIncident, onReset, current
           <div>
             <h2>Attack simulation lab</h2>
             <p className="muted">Recreate real-world supply-chain incidents and watch DevOps Shield contain the breach in real time.</p>
+            <div className="simulation-levels" style={{ marginTop: '12px', display: 'flex', gap: '16px' }}>
+              <span className="level-item"><span className="dot critical"></span> Critical (90+)</span>
+              <span className="level-item"><span className="dot high"></span> High (75-89)</span>
+              <span className="level-item"><span className="dot medium"></span> Medium (50-74)</span>
+            </div>
           </div>
           <div className="simulation-risk-indicator">
             <span className="label">Simulated risk</span>
