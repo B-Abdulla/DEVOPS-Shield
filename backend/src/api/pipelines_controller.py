@@ -25,7 +25,7 @@ STAGES = [
 ]
 
 PROJECTS = [
-    {"id": "backend", "name": "DEVOPS-Shield Backend CI/CD", "owner": "Abdul9010150809"},
+    {"id": "backend", "name": "DEVOPS-Shield Backend CI/CD", "owner": "B-Abdulla"},
     {"id": "frontend", "name": "Frontend React Build", "owner": "devops-team"},
     {"id": "infra", "name": "Infrastructure Deployment", "owner": "devops-ops"},
     {"id": "security", "name": "Security Hardening Pipeline", "owner": "security-team"},

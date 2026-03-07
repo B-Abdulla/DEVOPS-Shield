@@ -41,7 +41,7 @@ const LandingPage = ({ onEnter }) => {
                         <button className="btn-primary-large" onClick={onEnter}>
                             Enter Dashboard ➔
                         </button>
-                        <button className="btn-outline-large" onClick={() => window.open('https://github.com/Abdul9010150809/DEVOPS-Shield', '_blank')}>
+                        <button className="btn-outline-large" onClick={() => window.open('https://github.com/B-Abdulla/DEVOPS-Shield', '_blank')}>
                             View Documentation
                         </button>
                     </div>

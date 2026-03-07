@@ -9,22 +9,16 @@
 
 ---
 
-## 🏆 Hackathon Excellence
-
-**Event:** MindSprint 2K25 Hackathon  
-**Team:** DevOps Security Experts  
-**Achievement:** 🥇 **First Place - Security Innovation**
-
-**Team Members:**
-- **Shaik. Muzkeer** - Backend & Security Architecture
-- **Shaik. Abdul Sammed** - Frontend & UI/UX Design
-- **Suhail. B. K** - Blockchain & Integration
-
----
-
 ## 🎯 Project Overview
 
 DevOps Shield is a **zero-trust security layer** for CI/CD pipelines that combines advanced AI-powered threat detection with blockchain-backed immutability. The platform provides real-time fraud detection, supply chain security, and comprehensive risk intelligence from commit to release.
+
+## 👥 Team
+- **B.Abdulla**
+- **S.Abdul Sammad**
+- **J.Vinay Kumar**
+- **V.Bharath Kumar Reddy**
+- **G.Mahammad Umar**
 
 ### 🌟 Key Features
 
@@ -771,6 +765,7 @@ class SecurityAPILoadTest(HttpUser):
 - **Security Issues**: security@devops-shield.com (private, for security vulnerabilities)
 
 ### 📚 Documentation
+- **View Documentation**: [https://github.com/B-Abdulla/DEVOPS-Shield.git](https://github.com/B-Abdulla/DEVOPS-Shield.git)
 - **API Documentation**: [https://docs.devops-shield.com/api](https://docs.devops-shield.com/api)
 - **Security Guide**: [https://docs.devops-shield.com/security](https://docs.devops-shield.com/security)
 - **Deployment Guide**: [https://docs.devops-shield.com/deployment](https://docs.devops-shield.com/deployment)
@@ -787,16 +782,6 @@ class SecurityAPILoadTest(HttpUser):
 ## 📄 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **MindSprint 2K25 Hackathon** for the opportunity and platform
-- **FastAPI Team** for the excellent web framework
-- **React Community** for the amazing UI library
-- **Ethereum Foundation** for blockchain infrastructure
-- **Open Source Contributors** for tools and libraries
 
 ---
 
