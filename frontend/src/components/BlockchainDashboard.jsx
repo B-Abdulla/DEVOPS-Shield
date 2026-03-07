@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './BlockchainDashboard.css';
+import RiskBadge from './RiskBadge';
 
-const BLOCKCHAIN_API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
+const BLOCKCHAIN_API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
 
 // High-Fidelity Real-World Threat Scenarios
 const MOCK_EVENTS = [
@@ -109,21 +110,21 @@ const BlockchainDashboard = ({ authSession, integrations, onNavigate }) => {
     );
   }, [displayEvents, searchQuery]);
 
+  // Overall risk for the badge - derived from average event risk
+  const blockchainRisk = useMemo(() => {
+    if (auditTrail.length === 0) return 0;
+    const sum = auditTrail.reduce((acc, evt) => acc + (evt.risk_score || 0), 0);
+    return Math.round(sum / auditTrail.length);
+  }, [auditTrail]);
+
   return (
     <div className="blockchain-dashboard">
-      <div className="blockchain-hero">
-        <div className="hero-left">
-          <h1 className="hero-title">Blockchain Audit</h1>
-          <p className="hero-subtitle">About Blockchain Audit: Immutable CI/CD risk observability & supply chain integrity.</p>
+      <div className="page-header">
+        <div>
+          <h1>Blockchain Audit Trail</h1>
+          <p className="page-subtitle">Immutable CI/CD risk observability & cryptographically-verified supply chain integrity.</p>
         </div>
-        <div className="hero-actions">
-          <div className="hero-btn btn-simulate" onClick={() => onNavigate?.('simulation')}>
-            <span>🖋️</span> Simulate attack <span className="mini-badge">0% RISK</span>
-          </div>
-          <div className="hero-btn btn-github" onClick={() => onNavigate?.('github-connect')}>
-            <span>🔗</span> Connect GitHub
-          </div>
-        </div>
+        <RiskBadge score={blockchainRisk} size="lg" />
       </div>
 
       <div className="header-badge">🛡️ Ledger Protocol v2.1</div>
@@ -145,32 +146,58 @@ const BlockchainDashboard = ({ authSession, integrations, onNavigate }) => {
         </div>
       </div>
 
-      <div className="stats-grid-premium">
-        <PremiumCard label="Current Block" value={blockchainStats.block_number?.toLocaleString()} icon="📦" />
-        <PremiumCard label="Verified Events" value={blockchainStats.event_count} icon="✅" />
-        <PremiumCard label="Contract Status" value={blockchainStats.contract_status} icon="📝" />
-        <PremiumCard label="Network Uptime" value="99.99%" icon="⚡" />
-      </div>
+      <section className="card overview-band">
+        <div className="overview-grid">
+          <div className="overview-card">
+            <div className="overview-icon">📦</div>
+            <p className="label">Current Block</p>
+            <h3>{blockchainStats.block_number?.toLocaleString() || '---'}</h3>
+            <p className="muted">Latest chain height</p>
+          </div>
+          <div className="overview-card">
+            <div className="overview-icon">✅</div>
+            <p className="label">Verified Events</p>
+            <h3>{blockchainStats.event_count || '0'}</h3>
+            <p className="muted">Total ledger entries</p>
+          </div>
+          <div className="overview-card">
+            <div className="overview-icon">📝</div>
+            <p className="label">Contract Status</p>
+            <h3>{blockchainStats.contract_status || '---'}</h3>
+            <p className="muted">SM Integrity status</p>
+          </div>
+          <div className="overview-card">
+            <div className="overview-icon">⚡</div>
+            <p className="label">Network Uptime</p>
+            <h3>99.99%</h3>
+            <p className="muted">Shard reliability</p>
+          </div>
+        </div>
+      </section>
 
-      <div className="audit-container-premium">
-        <div className="audit-toolbar">
-          <div className="toolbar-left">
-            <input
-              type="text"
-              className="search-field-premium"
-              placeholder="Search threat ledger (e.g. 'leak')..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+      <div className="audit-container-premium card">
+        <header className="card-header audit-toolbar">
+          <div>
+            <h2>Threat Ledger</h2>
+            <p className="muted">Real-time immutable security event stream</p>
           </div>
           <div className="toolbar-right">
-            <button className="refresh-btn" onClick={() => { setLoading(true); fetchData().finally(() => setLoading(false)); }}>
+            <div className="search-container">
+              <input
+                type="text"
+                className="search-field-premium"
+                placeholder="Search threat ledger (e.g. 'leak')..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <button className="btn-outline refresh-btn" onClick={() => { setLoading(true); fetchData().finally(() => setLoading(false)); }}>
               {loading ? 'SYNCING...' : 'FORCE RE-SYNC'}
             </button>
           </div>
-        </div>
+        </header>
 
-        <div style={{ overflowX: 'auto' }}>
+        <div className="table-responsive" style={{ overflowX: 'auto' }}>
           <table className="threat-table">
             <thead>
               <tr>
@@ -188,8 +215,11 @@ const BlockchainDashboard = ({ authSession, integrations, onNavigate }) => {
                 const score = Number(evt.risk_score || 0);
                 return (
                   <tr key={`${evt.event_id}-${idx}`} className="threat-row">
-                    <td className="time-col" style={{ opacity: 0.6, fontSize: '0.85rem' }}>
-                      {new Date(evt.timestamp * 1000).toLocaleString()}
+                    <td className="time-col">
+                      <div className="timestamp-cell">
+                        {new Date(evt.timestamp * 1000).toLocaleDateString()}
+                        <span className="muted-time">{new Date(evt.timestamp * 1000).toLocaleTimeString()}</span>
+                      </div>
                     </td>
                     <td>
                       <span className={`sev-badge-premium sev-${sev}`}>
@@ -206,14 +236,15 @@ const BlockchainDashboard = ({ authSession, integrations, onNavigate }) => {
                             className="risk-fill-glow"
                             style={{
                               width: `${score}%`,
-                              background: score > 80 ? 'var(--rose)' : score > 50 ? 'var(--amber)' : 'var(--emerald)'
+                              background: score > 80 ? 'var(--rose)' : score > 50 ? 'var(--amber)' : 'var(--emerald)',
+                              color: score > 80 ? 'var(--rose)' : score > 50 ? 'var(--amber)' : 'var(--emerald)'
                             }}
                           ></div>
                         </div>
-                        <span style={{ fontWeight: 800 }}>{score}</span>
+                        <span className="risk-score-text">{score}</span>
                       </div>
                     </td>
-                    <td className="repo-col" style={{ fontWeight: 600, fontSize: '0.9rem' }}>{evt.repository}</td>
+                    <td className="repo-col">{evt.repository}</td>
                     <td>
                       <div className="verification-status">
                         {evt.verified ? (
@@ -229,34 +260,28 @@ const BlockchainDashboard = ({ authSession, integrations, onNavigate }) => {
             </tbody>
           </table>
           {filteredEvents.length === 0 && (
-            <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-dim)' }}>
-              NO MATCHING THREAT EVENTS FOUND.
+            <div className="empty-state-premium">
+              <div className="empty-icon">🔍</div>
+              <p>NO MATCHING THREAT EVENTS FOUND.</p>
+              <button className="btn-link" onClick={() => setSearchQuery('')}>Clear search filters</button>
             </div>
           )}
         </div>
       </div>
 
-      <footer className="blockchain-footer-premium">
+      <footer className="blockchain-footer-premium card">
         <div className="shield-icon-lrg">🛡️</div>
         <div className="footer-text">
-          <h4>Smart Contract Integrity Verified</h4>
-          <p>
-            This dashboard communicates directly with contract <code>{blockchainStats.contract_address}</code>.
+          <h2>Smart Contract Integrity Verified</h2>
+          <p className="muted">
+            This dashboard communicates directly with protocol contract <code>{blockchainStats.contract_address}</code>.
             Modifying any event displayed here would require compromising 51% of the Shield-Net node network,
-            ensuring audit logs remain tamper-proof for regulatory compliance.
+            ensuring audit logs remain tamper-proof for regulatory compliance and supply chain security.
           </p>
         </div>
       </footer>
     </div>
   );
 };
-
-const PremiumCard = ({ label, value, icon }) => (
-  <div className="premium-card">
-    <div className="card-icon">{icon}</div>
-    <div className="card-label">{label}</div>
-    <div className="card-value" title={value}>{value || '---'}</div>
-  </div>
-);
 
 export default BlockchainDashboard;

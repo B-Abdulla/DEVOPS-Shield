@@ -35,85 +35,9 @@
   }
 }
 
-/* Premium Hero Section */
-.blockchain-hero {
-  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent),
-    rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border);
-  border-radius: 1.5rem;
-  padding: 1.75rem 2.25rem;
-  margin-bottom: 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-}
+/* Redundant hero styles removed - using global page-header */
 
-.hero-title {
-  font-size: 2rem;
-  font-weight: 900;
-  margin: 0;
-  background: linear-gradient(135deg, #fff 0%, #38bdf8 50%, #a855f7 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: -0.03em;
-  text-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-}
-
-.hero-subtitle {
-  color: var(--text-dim);
-  font-size: 1.05rem;
-  font-weight: 500;
-  margin-top: 0.4rem;
-  opacity: 0.9;
-}
-
-.hero-actions {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  z-index: 2;
-}
-
-.hero-btn {
-  padding: 0.85rem 1.75rem;
-  border-radius: 12px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  font-size: 0.95rem;
-  border: 1px solid transparent;
-}
-
-.btn-simulate {
-  background: rgba(15, 23, 42, 0.8);
-  border-color: rgba(56, 189, 248, 0.25);
-  color: #f1f5f9;
-}
-
-.btn-simulate:hover {
-  border-color: var(--primary);
-  background: rgba(56, 189, 248, 0.05);
-}
-
-.btn-github {
-  background: linear-gradient(135deg, #a855f7, #7c3aed);
-  color: white;
-  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
-}
-
-.hero-btn:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
-}
+/* Redundant hero actions removed */
 
 .header-badge {
   display: inline-flex;
@@ -256,12 +180,20 @@
 }
 
 .audit-toolbar {
-  padding: 1.75rem 2.5rem;
-  background: rgba(0, 0, 0, 0.3);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--glass-border);
+  gap: 2rem;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.search-container {
+  position: relative;
 }
 
 .search-field-premium {
@@ -379,59 +311,74 @@
   filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.6));
 }
 
-.blockchain-footer-premium {
-  margin-top: 5rem;
-  padding: 3.5rem;
-  background: linear-gradient(165deg, rgba(56, 189, 248, 0.08), rgba(15, 23, 42, 0.6));
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: 2.5rem;
+.risk-visual-premium {
   display: flex;
-  gap: 3rem;
   align-items: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  gap: 1rem;
+  min-width: 140px;
 }
 
-.shield-icon-lrg {
-  font-size: 4rem;
-  filter: drop-shadow(0 0 20px var(--primary));
-  animation: floatShield 6s ease-in-out infinite;
+.risk-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-@keyframes floatShield {
-
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-
-  50% {
-    transform: translateY(-15px) rotate(5deg);
-  }
+.risk-score-text {
+  font-weight: 800;
+  font-size: 0.9rem;
+  min-width: 2ch;
 }
 
-.footer-text h4 {
-  font-size: 1.5rem;
-  letter-spacing: -0.01em;
-  margin-bottom: 0.75rem;
+.timestamp-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-weight: 500;
 }
 
-.footer-text p {
-  font-size: 1.05rem;
-  line-height: 1.7;
-  max-width: 800px;
+.muted-time {
+  font-size: 0.75rem;
+  opacity: 0.5;
+}
+
+.empty-state-premium {
+  padding: 4rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  opacity: 0.3;
+}
+
+.blockchain-footer-premium {
+  margin-top: 3rem;
+  padding: 2.5rem;
+  display: flex;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.blockchain-footer-premium h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1.4rem;
 }
 
 @media (max-width: 1024px) {
-  .blockchain-hero {
+  .audit-toolbar {
     flex-direction: column;
-    text-align: center;
-    gap: 1.5rem;
+    align-items: stretch;
   }
 
-  .hero-actions {
-    width: 100%;
-    justify-content: center;
+  .toolbar-right {
+    flex-direction: column;
   }
 
   .search-field-premium {
